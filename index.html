@@ -829,9 +829,8 @@
             if (!insumo || monto <= 0) { alert('Completá al menos el insumo y el monto'); return; }
 
             try {
-                window.showSaveNotification('⏳ Subiendo archivos...');
+                window.showSaveNotification('⏳ Subiendo...');
                 let facturaUrl = '', recetaUrl = '', formularioUrl = '';
-                let facturaShort = '', recetaShort = '', formularioShort = '';
 
                 const facturaFile = document.getElementById('compraFactura').files[0];
                 const recetaFile = document.getElementById('compraReceta').files[0];
@@ -842,26 +841,22 @@
                     const facturaRef = ref(storage, `compras/${mes}/factura_${timestamp}_${facturaFile.name}`);
                     await uploadBytes(facturaRef, facturaFile);
                     facturaUrl = await getDownloadURL(facturaRef);
-                    facturaShort = await window.shortenUrl(facturaUrl);
                 }
                 if (recetaFile) {
                     const recetaRef = ref(storage, `compras/${mes}/receta_${timestamp}_${recetaFile.name}`);
                     await uploadBytes(recetaRef, recetaFile);
                     recetaUrl = await getDownloadURL(recetaRef);
-                    recetaShort = await window.shortenUrl(recetaUrl);
                 }
                 if (formularioFile) {
                     const formularioRef = ref(storage, `compras/${mes}/formulario_${timestamp}_${formularioFile.name}`);
                     await uploadBytes(formularioRef, formularioFile);
                     formularioUrl = await getDownloadURL(formularioRef);
-                    formularioShort = await window.shortenUrl(formularioUrl);
                 }
 
                 await addDoc(collection(db, comprasCollection), {
                     insumo: insumo.toUpperCase(),
                     cantidad, monto, proveedor, fecha, mes,
                     facturaUrl, recetaUrl, formularioUrl,
-                    facturaShort, recetaShort, formularioShort,
                     estado: 'pendiente',
                     createdAt: new Date().toISOString()
                 });
@@ -950,12 +945,12 @@
             }
         };
 
-        // Función para acortar URLs usando clck.ru (gratis, redirección directa)
+        // Función para acortar URLs usando TinyURL API
         window.shortenUrl = async (longUrl) => {
             try {
-                const response = await fetch(`https://clck.ru/--?url=${encodeURIComponent(longUrl)}`);
+                const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
                 const shortUrl = await response.text();
-                return shortUrl.trim() || longUrl;
+                return shortUrl || longUrl;
             } catch (error) {
                 console.error('Error acortando URL:', error);
                 return longUrl;
@@ -1043,7 +1038,7 @@
             const [mesNum, año] = mes.split('-');
             const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-            // Construir detalle con links cortos (guardados en Firebase)
+            // Construir detalle con links
             let detalleCompras = '';
             comprasMes.forEach((c, index) => {
                 detalleCompras += `\n${index + 1}. ${c.insumo}\n`;
@@ -1052,17 +1047,17 @@
                 if (c.proveedor) detalleCompras += ` | Proveedor: ${c.proveedor}`;
                 detalleCompras += `\n`;
 
-                // Usar links cortos guardados, o largos si no existen
+                // Agregar links a documentos (acortados)
                 if (c.facturaUrl || c.recetaUrl || c.formularioUrl) {
                     detalleCompras += `   📎 Documentación adjunta:\n`;
                     if (c.facturaUrl) {
-                        detalleCompras += `      • Factura: ${c.facturaShort || c.facturaUrl}\n`;
+                        detalleCompras += `      • Factura: ${c.facturaUrl}\n`;
                     }
                     if (c.recetaUrl) {
-                        detalleCompras += `      • Receta: ${c.recetaShort || c.recetaUrl}\n`;
+                        detalleCompras += `      • Receta: ${c.recetaUrl}\n`;
                     }
                     if (c.formularioUrl) {
-                        detalleCompras += `      • Formulario: ${c.formularioShort || c.formularioUrl}\n`;
+                        detalleCompras += `      • Formulario: ${c.formularioUrl}\n`;
                     }
                 }
             });
