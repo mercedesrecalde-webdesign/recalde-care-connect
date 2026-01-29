@@ -1038,7 +1038,6 @@
             const [mesNum, año] = mes.split('-');
             const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-            // Construir detalle con links
             let detalleCompras = '';
             comprasMes.forEach((c, index) => {
                 detalleCompras += `\n${index + 1}. ${c.insumo}\n`;
@@ -1047,41 +1046,25 @@
                 if (c.proveedor) detalleCompras += ` | Proveedor: ${c.proveedor}`;
                 detalleCompras += `\n`;
 
-                // Agregar links a documentos (acortados)
                 if (c.facturaUrl || c.recetaUrl || c.formularioUrl) {
                     detalleCompras += `   📎 Documentación adjunta:\n`;
-                    if (c.facturaUrl) {
-                        detalleCompras += `      • Factura: ${c.facturaUrl}\n`;
-                    }
-                    if (c.recetaUrl) {
-                        detalleCompras += `      • Receta: ${c.recetaUrl}\n`;
-                    }
-                    if (c.formularioUrl) {
-                        detalleCompras += `      • Formulario: ${c.formularioUrl}\n`;
-                    }
+                    if (c.facturaUrl) detalleCompras += `      • Factura: ${c.facturaUrl}\n`;
+                    if (c.recetaUrl) detalleCompras += `      • Receta: ${c.recetaUrl}\n`;
+                    if (c.formularioUrl) detalleCompras += `      • Formulario: ${c.formularioUrl}\n`;
                 }
             });
 
-            const subject = encodeURIComponent(`SOLICITUD DE REINTEGRO - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año} - RECALDE PATRICIO MARIANO (DNI 36.158.958)`);
-            const body = encodeURIComponent(
-                `A la Auditoría Médica de OSEF,\n\n` +
-                `${intro}\n\n` +
-                `${'═'.repeat(50)}\n` +
-                `DETALLE DE GASTOS - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}\n` +
-                `${'═'.repeat(50)}\n` +
-                detalleCompras +
-                `\n${'═'.repeat(50)}\n` +
-                `TOTAL A REINTEGRAR: $${total.toLocaleString()}\n` +
-                `${'═'.repeat(50)}\n\n` +
-                `${footer}\n\n` +
-                `Atentamente,\n\n` +
-                `Patricio Mariano Recalde\n` +
-                `DNI: 36.158.958\n` +
-                `CUIL: 23-36158958-0\n` +
-                `Email: pmrecalde91@gmail.com`
-            );
+            const body = `A la Auditoría Médica de OSEF,\n\n${intro}\n\n${'═'.repeat(50)}\nDETALLE DE GASTOS - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}\n${'═'.repeat(50)}\n${detalleCompras}\n${'═'.repeat(50)}\nTOTAL A REINTEGRAR: $${total.toLocaleString()}\n${'═'.repeat(50)}\n\n${footer}\n\nAtentamente,\n\nPatricio Mariano Recalde\nDNI: 36.158.958\nCUIL: 23-36158958-0\nEmail: pmrecalde91@gmail.com`;
 
-            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${subject}&body=${body}&authuser=pmrecalde91@gmail.com`, '_blank');
+            const textarea = document.createElement('textarea');
+            textarea.value = body;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            alert('✓ CONTENIDO COPIADO\n\nAhora se abre Gmail.\nPegá el contenido con Ctrl+V en el cuerpo del email.');
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${encodeURIComponent(`SOLICITUD DE REINTEGRO - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año} - RECALDE PATRICIO MARIANO (DNI 36.158.958)`)}&authuser=pmrecalde91@gmail.com`, '_blank');
         };
 
         // ========== RENDER ==========
