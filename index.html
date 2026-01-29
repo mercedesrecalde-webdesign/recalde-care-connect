@@ -1029,7 +1029,8 @@
                 </div>`
         };
 
-        window.sendMailReintegro = () => {
+        window.sendMailReintegro = async () => {
+            window.showSaveNotification('⏳ Preparando email...');
             const mes = document.getElementById('reintegroMesSelect').value;
             const comprasMes = compras.filter(c => c.mes === mes && c.estado === 'pendiente');
             const total = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
@@ -1038,7 +1039,14 @@
             const [mesNum, año] = mes.split('-');
             const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-            // Construir detalle con links
+            // Acortar todos los URLs primero
+            for (let c of comprasMes) {
+                if (c.facturaUrl && !c.facturaUrlShort) c.facturaUrlShort = await window.shortenUrl(c.facturaUrl);
+                if (c.recetaUrl && !c.recetaUrlShort) c.recetaUrlShort = await window.shortenUrl(c.recetaUrl);
+                if (c.formularioUrl && !c.formularioUrlShort) c.formularioUrlShort = await window.shortenUrl(c.formularioUrl);
+            }
+
+            // Construir detalle con links acortados
             let detalleCompras = '';
             comprasMes.forEach((c, index) => {
                 detalleCompras += `\n${index + 1}. ${c.insumo}\n`;
@@ -1047,20 +1055,17 @@
                 if (c.proveedor) detalleCompras += ` | Proveedor: ${c.proveedor}`;
                 detalleCompras += `\n`;
 
-                // Agregar links a documentos (acortados)
+                // Agregar links a documentos (acortados con TinyURL)
                 if (c.facturaUrl || c.recetaUrl || c.formularioUrl) {
                     detalleCompras += `   📎 Documentación adjunta:\n`;
                     if (c.facturaUrl) {
-                        const shortUrl = c.facturaUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
-                        detalleCompras += `      • Factura: ${shortUrl}\n`;
+                        detalleCompras += `      • Factura: ${c.facturaUrlShort || c.facturaUrl}\n`;
                     }
                     if (c.recetaUrl) {
-                        const shortUrl = c.recetaUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
-                        detalleCompras += `      • Receta: ${shortUrl}\n`;
+                        detalleCompras += `      • Receta: ${c.recetaUrlShort || c.recetaUrl}\n`;
                     }
                     if (c.formularioUrl) {
-                        const shortUrl = c.formularioUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
-                        detalleCompras += `      • Formulario: ${shortUrl}\n`;
+                        detalleCompras += `      • Formulario: ${c.formularioUrlShort || c.formularioUrl}\n`;
                     }
                 }
             });
