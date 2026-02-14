@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -606,6 +605,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDocs, writeBatch, addDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBUZbbsxy5QI5LVwVOsfi0SOPK0YMPcV-4",
@@ -618,6 +618,58 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🔄 SYNC BIDIRECCIONAL — Conexión a Nursing
+        // ═══════════════════════════════════════════════════════════════
+        // Nursing solo maneja stockDomicilio (depto del hermano)
+        // Cuando Care Connect cambia stockDomicilio → reflejar en Nursing
+        // ═══════════════════════════════════════════════════════════════
+        const nursingConfig = {
+            apiKey: "AIzaSyD_S99nIcE08-yPbdbEYr_okxptZ7m9csI",
+            authDomain: "recalde-nursing.firebaseapp.com",
+            projectId: "recalde-nursing",
+            storageBucket: "recalde-nursing.firebasestorage.app",
+            messagingSenderId: "761960971726",
+            appId: "1:761960971726:web:6e45cc9f47f4c7c0a3bf9f"
+        };
+        const nursingApp = initializeApp(nursingConfig, 'nursing');
+        const nursingDb = getFirestore(nursingApp);
+        const nursingAuth = getAuth(nursingApp);
+
+        // Cache: nombre del insumo → firebaseId en Nursing
+        let nursingInventoryMap = {};
+        let nursingSyncReady = false;
+        const NURSING_APP_ID = 'recalde-care-final-v1';
+
+        // Autenticar y cargar mapa de inventario de Nursing
+        signInAnonymously(nursingAuth).then(async () => {
+            try {
+                const nursingInvRef = collection(nursingDb, 'artifacts', NURSING_APP_ID, 'public', 'data', 'inventory_stable');
+                const snap = await getDocs(nursingInvRef);
+                nursingInventoryMap = {};
+                snap.docs.forEach(d => { nursingInventoryMap[d.data().name] = d.id; });
+                nursingSyncReady = true;
+                console.log('🔗 Sync Nursing listo:', Object.keys(nursingInventoryMap).length, 'insumos mapeados');
+            } catch (e) {
+                console.warn('⚠️ No se pudo cargar mapa Nursing:', e.message);
+            }
+        }).catch(e => console.warn('⚠️ Auth Nursing falló:', e.message));
+
+        // Sincronizar stockDomicilio hacia Nursing
+        const syncToNursing = async (itemName, newStockDomicilio) => {
+            if (!nursingSyncReady) return;
+            const nursingDocId = nursingInventoryMap[itemName];
+            if (!nursingDocId) { console.log('🔄 Sync: no encontrado en Nursing:', itemName); return; }
+            try {
+                const nursingDocRef = doc(nursingDb, 'artifacts', NURSING_APP_ID, 'public', 'data', 'inventory_stable', nursingDocId);
+                await setDoc(nursingDocRef, { stockDomicilio: newStockDomicilio }, { merge: true });
+                console.log(`🔄 Sync → Nursing: ${itemName} domicilio=${newStockDomicilio}`);
+            } catch (e) {
+                console.warn('⚠️ Sync Nursing falló:', e.message);
+            }
+        };
+        // ═══════════════════════════════════════════════════════════════
 
         const collectionName = 'care_connect_inventory';
         const comprasCollection = 'care_connect_compras';
@@ -759,7 +811,7 @@
                 const autoMora = (item.requested || 0) - val;
                 updateObj.claimQty = autoMora > 0 ? autoMora : 0;
             }
-            try { await updateDoc(doc(db, collectionName, firebaseId), updateObj); window.showSaveNotification('✓ Guardado'); }
+            try { await updateDoc(doc(db, collectionName, firebaseId), updateObj); window.showSaveNotification('✓ Guardado'); if (field === 'stockDomicilio') syncToNursing(item.name, val); }
             catch (error) { console.error('Error:', error); window.showSaveNotification('⚠ Error'); }
         };
 
@@ -787,7 +839,12 @@
             if (!item || (item.stockOsef || 0) < 1) return;
             let newAnt = item.stockAnterior || 0, newDel = item.delivered || 0;
             if (newAnt > 0) newAnt -= 1; else if (newDel > 0) newDel -= 1;
-            try { await updateDoc(doc(db, collectionName, firebaseId), { stockDomicilio: (item.stockDomicilio || 0) + 1, stockAnterior: newAnt, delivered: newDel, stockOsef: newAnt + newDel }); window.showSaveNotification('✓ Stock actualizado'); }
+            const newStockDom = (item.stockDomicilio || 0) + 1;
+            try {
+                await updateDoc(doc(db, collectionName, firebaseId), { stockDomicilio: newStockDom, stockAnterior: newAnt, delivered: newDel, stockOsef: newAnt + newDel });
+                window.showSaveNotification('✓ Stock actualizado');
+                syncToNursing(item.name, newStockDom); // 🔄 Sync → Nursing
+            }
             catch (error) { window.showSaveNotification('⚠ Error'); }
         };
 
@@ -1038,6 +1095,7 @@
             const [mesNum, año] = mes.split('-');
             const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+            // Construir detalle con links
             let detalleCompras = '';
             comprasMes.forEach((c, index) => {
                 detalleCompras += `\n${index + 1}. ${c.insumo}\n`;
@@ -1046,25 +1104,44 @@
                 if (c.proveedor) detalleCompras += ` | Proveedor: ${c.proveedor}`;
                 detalleCompras += `\n`;
 
+                // Agregar links a documentos (acortados)
                 if (c.facturaUrl || c.recetaUrl || c.formularioUrl) {
                     detalleCompras += `   📎 Documentación adjunta:\n`;
-                    if (c.facturaUrl) detalleCompras += `      • Factura: ${c.facturaUrl}\n`;
-                    if (c.recetaUrl) detalleCompras += `      • Receta: ${c.recetaUrl}\n`;
-                    if (c.formularioUrl) detalleCompras += `      • Formulario: ${c.formularioUrl}\n`;
+                    if (c.facturaUrl) {
+                        const shortUrl = c.facturaUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
+                        detalleCompras += `      • Factura: ${shortUrl}\n`;
+                    }
+                    if (c.recetaUrl) {
+                        const shortUrl = c.recetaUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
+                        detalleCompras += `      • Receta: ${shortUrl}\n`;
+                    }
+                    if (c.formularioUrl) {
+                        const shortUrl = c.formularioUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
+                        detalleCompras += `      • Formulario: ${shortUrl}\n`;
+                    }
                 }
             });
 
-            const body = `A la Auditoría Médica de OSEF,\n\n${intro}\n\n${'═'.repeat(50)}\nDETALLE DE GASTOS - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}\n${'═'.repeat(50)}\n${detalleCompras}\n${'═'.repeat(50)}\nTOTAL A REINTEGRAR: $${total.toLocaleString()}\n${'═'.repeat(50)}\n\n${footer}\n\nAtentamente,\n\nPatricio Mariano Recalde\nDNI: 36.158.958\nCUIL: 23-36158958-0\nEmail: pmrecalde91@gmail.com`;
+            const subject = encodeURIComponent(`SOLICITUD DE REINTEGRO - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año} - RECALDE PATRICIO MARIANO (DNI 36.158.958)`);
+            const body = encodeURIComponent(
+                `A la Auditoría Médica de OSEF,\n\n` +
+                `${intro}\n\n` +
+                `${'═'.repeat(50)}\n` +
+                `DETALLE DE GASTOS - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}\n` +
+                `${'═'.repeat(50)}\n` +
+                detalleCompras +
+                `\n${'═'.repeat(50)}\n` +
+                `TOTAL A REINTEGRAR: $${total.toLocaleString()}\n` +
+                `${'═'.repeat(50)}\n\n` +
+                `${footer}\n\n` +
+                `Atentamente,\n\n` +
+                `Patricio Mariano Recalde\n` +
+                `DNI: 36.158.958\n` +
+                `CUIL: 23-36158958-0\n` +
+                `Email: pmrecalde91@gmail.com`
+            );
 
-            const textarea = document.createElement('textarea');
-            textarea.value = body;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            alert('✓ CONTENIDO COPIADO\n\nAhora se abre Gmail.\nPegá el contenido con Ctrl+V en el cuerpo del email.');
-            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${encodeURIComponent(`SOLICITUD DE REINTEGRO - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año} - RECALDE PATRICIO MARIANO (DNI 36.158.958)`)}&authuser=pmrecalde91@gmail.com`, '_blank');
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${subject}&body=${body}&authuser=pmrecalde91@gmail.com`, '_blank');
         };
 
         // ========== RENDER ==========
