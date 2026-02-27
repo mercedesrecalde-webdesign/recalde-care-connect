@@ -1,0 +1,1433 @@
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RECALDE CARE CONNECT - Gestión de Insumos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Dancing+Script:wght@700&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            padding: 10px 0;
+        }
+
+        .text-bold-main {
+            font-weight: 800;
+            font-size: 1.75rem;
+            letter-spacing: -0.04em;
+            color: #0f172a;
+            text-transform: uppercase;
+        }
+
+        .care-center {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.8rem;
+            color: #2563eb;
+            position: absolute;
+            left: 50%;
+            top: 45%;
+            transform: translate(-50%, -50%) rotate(-6deg);
+            z-index: 10;
+            text-shadow: 3px 3px 0px #f8fafc, -2px -2px 0px #f8fafc;
+            text-transform: none;
+            pointer-events: none;
+        }
+
+        .gap-logo {
+            width: 65px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .tab-active {
+            background-color: white !important;
+            color: #2563eb !important;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            font-weight: 800;
+            transform: translateY(-1px);
+        }
+
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                padding: 0 !important;
+            }
+
+            .print-area {
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .stat-card {
+            border-left: 4px solid #cbd5e1;
+            cursor: pointer;
+        }
+
+        .stat-card.active {
+            border-left-color: #2563eb;
+            background: white;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .btn-bajar {
+            background-color: #10b981;
+            color: white;
+            font-weight: 900;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .btn-bajar:hover:not(:disabled) {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-bajar:disabled {
+            background-color: #f1f5f9;
+            color: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .month-selector {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .month-selector select {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .month-selector select option {
+            background: #1e40af;
+            color: white;
+        }
+
+        .reader-mode-banner {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #bae6fd;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-upload-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .file-badge {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .file-badge.pending {
+            background: #fef3c7;
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen pb-20">
+    <div id="app-root" class="max-w-[1450px] mx-auto px-4 pt-10">
+        <!-- CABECERA -->
+        <header
+            class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6 no-print text-left">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600 p-4 rounded-3xl shadow-xl shadow-blue-100 transform -rotate-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="sync-indicator" class="pulse-dot bg-emerald-500 animate-pulse"></span>
+                        <div class="logo-container">
+                            <span class="text-bold-main">RECALDE</span>
+                            <div class="gap-logo"></div>
+                            <span class="text-bold-main">CONNECT</span>
+                            <span class="care-center font-handscript italic">Care</span>
+                        </div>
+                    </div>
+                    <div id="status-badge" class="mt-1"><span
+                            class="px-3 py-1 bg-white shadow-sm text-slate-500 text-[10px] font-bold rounded-full uppercase border border-slate-200 tracking-widest font-mono">Modo
+                            Consulta (Lectura)</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 justify-center lg:justify-end">
+                <div id="editor-controls" class="hidden flex gap-2">
+                    <button onclick="window.openModal()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-lg hover:bg-blue-700 uppercase tracking-widest transition-all">Añadir
+                        Insumo</button>
+                    <button onclick="window.openPrintPreview()"
+                        class="px-4 py-2 bg-slate-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-slate-600 transition-all">Nota
+                        Reclamo</button>
+                    <button onclick="window.logoutEditor()"
+                        class="px-4 py-2 bg-white border border-red-200 text-red-500 rounded-xl text-[10px] font-black uppercase hover:bg-red-50">Salir</button>
+                </div>
+                <button id="btn-login-trigger" onclick="window.openLoginModal()"
+                    class="px-5 py-2 bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md">Acceso
+                    Editor</button>
+            </div>
+        </header>
+
+        <!-- NAVEGACIÓN -->
+        <div id="nav-tabs"
+            class="bg-slate-200/50 p-1.5 rounded-2xl flex flex-wrap gap-1 mb-8 no-print max-w-fit mx-auto md:mx-0 hidden">
+            <button onclick="window.setView('casa')" id="tab-casa"
+                class="px-5 py-3 rounded-xl text-[11px] font-extrabold transition-all tab-active uppercase">Control
+                Domicilio</button>
+            <button onclick="window.setView('osef')" id="tab-osef"
+                class="px-5 py-3 rounded-xl text-[11px] font-extrabold transition-all text-slate-500 uppercase">Depósito
+                / OSEF</button>
+            <button onclick="window.setView('nuevo_pedido')" id="tab-nuevo_pedido"
+                class="px-5 py-3 rounded-xl text-[11px] font-extrabold transition-all text-slate-500 uppercase border-2 border-dashed border-blue-200 bg-blue-50/50">Próximo
+                Pedido</button>
+            <button onclick="window.setView('reclamos')" id="tab-reclamos"
+                class="px-5 py-3 rounded-xl text-[11px] font-extrabold transition-all text-slate-500 uppercase flex items-center gap-2">
+                Auditoría Reclamos
+                <span id="badge-reclamos-count"
+                    class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">0</span>
+            </button>
+            <button onclick="window.setView('reintegros')" id="tab-reintegros"
+                class="px-5 py-3 rounded-xl text-[11px] font-extrabold transition-all text-slate-500 uppercase flex items-center gap-2 bg-purple-50 border-2 border-dashed border-purple-200">
+                💰 Reintegros
+                <span id="badge-reintegros-total"
+                    class="bg-purple-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">$0</span>
+            </button>
+        </div>
+
+        <!-- Banner modo lectura -->
+        <div id="reader-banner" class="reader-mode-banner no-print">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-500" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <h2 class="text-lg font-black text-sky-700 uppercase tracking-tight">Panel de Consulta</h2>
+            </div>
+            <p class="text-xs text-sky-600">Vista de solo lectura del stock disponible en domicilio</p>
+        </div>
+
+        <div id="stats-container" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 no-print text-center"></div>
+        <div id="search-container" class="flex flex-col md:flex-row gap-4 mb-6 no-print">
+            <input type="text" id="searchBar" oninput="window.render()" placeholder="Buscar insumo..."
+                class="flex-1 px-6 py-4 rounded-2xl border border-slate-200 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none glass-card font-medium uppercase text-sm">
+        </div>
+        <div id="main-content" class="glass-card overflow-hidden shadow-2xl min-h-[400px]"></div>
+    </div>
+
+    <!-- MODALES -->
+    <div id="loginModal" class="fixed inset-0 modal-overlay z-[110] hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 border border-slate-100 text-center">
+            <h2 class="text-xl font-black uppercase mb-6 tracking-tighter text-slate-900">Autenticación</h2>
+            <input type="password" id="pass-code" placeholder="CLAVE"
+                class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xl font-black tracking-widest outline-none mb-4 uppercase">
+            <div class="flex gap-2">
+                <button onclick="window.closeLoginModal()"
+                    class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-200">Cancelar</button>
+                <button onclick="window.checkEditorAccess()"
+                    class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg hover:bg-blue-700">Validar</button>
+            </div>
+            <p id="pass-error" class="text-red-500 text-[10px] font-black uppercase mt-4 opacity-0 transition-opacity">
+                Clave Incorrecta</p>
+        </div>
+    </div>
+
+    <div id="itemModal" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+            <div class="bg-blue-600 px-8 py-6 text-white uppercase font-black text-sm tracking-widest text-center">
+                Gestión de Insumo</div>
+            <div class="p-8 space-y-4">
+                <input type="text" id="newName" placeholder="NOMBRE MATERIAL"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold uppercase focus:ring-2 focus:ring-blue-500">
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="newCat"
+                        class="px-4 py-3 rounded-xl border border-slate-200 font-bold outline-none text-sm uppercase">
+                        <option value="Farmacia">Farmacia</option>
+                        <option value="Insumos">Insumos/Compras</option>
+                    </select>
+                    <input type="number" step="any" id="newPrice" placeholder="PRECIO UNIT. $"
+                        class="px-4 py-3 rounded-xl border border-slate-200 font-bold outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" step="any" id="newHome" placeholder="STOCK CASA"
+                        class="px-4 py-3 rounded-xl border border-slate-200 font-bold outline-none">
+                    <input type="number" step="any" id="newMin" placeholder="MÍNIMO"
+                        class="px-4 py-3 rounded-xl border border-slate-200 font-bold outline-none">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="window.closeModal()"
+                        class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 text-center">Cerrar</button>
+                    <button onclick="window.addItem()"
+                        class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg hover:bg-blue-700 text-center">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Compra/Reintegro -->
+    <div id="compraModal"
+        class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 my-8">
+            <div
+                class="bg-gradient-to-r from-purple-600 to-purple-800 px-8 py-6 text-white uppercase font-black text-sm tracking-widest text-center">
+                📎 Registrar Compra para Reintegro
+            </div>
+            <div class="p-8 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Fecha de
+                            Compra</label>
+                        <input type="date" id="compraFecha"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Mes de
+                            Reintegro</label>
+                        <select id="compraMes"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Insumo /
+                        Descripción</label>
+                    <input type="text" id="compraInsumo" placeholder="Ej: SONDAS DE ASPIRACIÓN K32"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold uppercase">
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Cantidad</label>
+                        <input type="number" step="any" id="compraCantidad" placeholder="0"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold text-center">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Monto Total $</label>
+                        <input type="number" step="0.01" id="compraMonto" placeholder="0.00"
+                            class="w-full px-4 py-3 rounded-xl border border-purple-300 bg-purple-50 outline-none font-black text-purple-700 text-center">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Proveedor</label>
+                        <input type="text" id="compraProveedor" placeholder="Farmacia..."
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold">
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-5 space-y-4">
+                    <p class="text-[10px] font-black uppercase text-slate-600 text-center">Adjuntar Documentación (PDF)
+                    </p>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="text-center">
+                            <label class="file-upload-btn cursor-pointer block">
+                                📄 Factura
+                                <input type="file" id="compraFactura" accept=".pdf" class="hidden"
+                                    onchange="window.updateFileLabel('factura')">
+                            </label>
+                            <span id="label-factura" class="text-[9px] text-slate-400 block mt-1">Sin archivo</span>
+                        </div>
+                        <div class="text-center">
+                            <label class="file-upload-btn cursor-pointer block">
+                                📋 Receta
+                                <input type="file" id="compraReceta" accept=".pdf" class="hidden"
+                                    onchange="window.updateFileLabel('receta')">
+                            </label>
+                            <span id="label-receta" class="text-[9px] text-slate-400 block mt-1">Sin archivo</span>
+                        </div>
+                        <div class="text-center">
+                            <label class="file-upload-btn cursor-pointer block">
+                                📝 Formulario
+                                <input type="file" id="compraFormulario" accept=".pdf" class="hidden"
+                                    onchange="window.updateFileLabel('formulario')">
+                            </label>
+                            <span id="label-formulario" class="text-[9px] text-slate-400 block mt-1">Opcional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button onclick="window.closeCompraModal()"
+                        class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 text-center">Cancelar</button>
+                    <button onclick="window.saveCompra()"
+                        class="flex-1 py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg hover:bg-purple-700 text-center">💾
+                        Guardar Compra</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Print Preview -->
+    <div id="printModal"
+        class="fixed inset-0 modal-overlay z-[130] hidden flex items-center justify-center p-4 overflow-y-auto no-print">
+        <div
+            class="bg-white w-full max-w-5xl shadow-2xl rounded-xl flex flex-col md:flex-row h-[90vh] overflow-hidden border border-slate-200">
+            <div class="w-full md:w-80 bg-slate-50 p-6 border-r border-slate-200 overflow-y-auto">
+                <h3 class="text-sm font-black uppercase text-slate-800 mb-6 tracking-widest">Editor de Reporte</h3>
+                <div class="space-y-4">
+                    <textarea id="edit-intro" onkeyup="window.updateNotePreview()"
+                        class="w-full h-32 p-3 text-xs border rounded-xl focus:ring-4 focus:ring-blue-100 outline-none leading-relaxed"></textarea>
+                    <textarea id="edit-footer" onkeyup="window.updateNotePreview()"
+                        class="w-full h-20 p-3 text-xs border rounded-xl focus:ring-4 focus:ring-blue-100 outline-none leading-relaxed"></textarea>
+                    <button onclick="window.sendMailClaim()"
+                        class="w-full py-4 bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg hover:bg-blue-800">Enviar
+                        Gmail</button>
+                </div>
+            </div>
+            <div class="flex-1 flex flex-col bg-white overflow-hidden">
+                <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
+                    <span class="font-bold text-[10px] uppercase tracking-widest">Vista Oficial</span>
+                    <div class="flex gap-2">
+                        <button onclick="window.print()"
+                            class="bg-blue-600 px-4 py-2 rounded text-[10px] font-black uppercase">Imprimir</button>
+                        <button onclick="window.closePrintPreview()"
+                            class="bg-slate-700 px-4 py-2 rounded text-[10px] font-black uppercase">Cerrar</button>
+                    </div>
+                </div>
+                <div id="note-body" class="p-16 text-slate-900 bg-white overflow-y-auto flex-1 print:p-0"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nota Reintegro -->
+    <div id="reintegroModal"
+        class="fixed inset-0 modal-overlay z-[130] hidden flex items-center justify-center p-4 overflow-y-auto no-print">
+        <div
+            class="bg-white w-full max-w-5xl shadow-2xl rounded-xl flex flex-col md:flex-row h-[90vh] overflow-hidden border border-slate-200">
+            <div class="w-full md:w-80 bg-purple-50 p-6 border-r border-purple-200 overflow-y-auto">
+                <h3 class="text-sm font-black uppercase text-purple-800 mb-6 tracking-widest">Nota de Reintegro</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-purple-600 uppercase">Mes a reclamar</label>
+                        <select id="reintegroMesSelect" onchange="window.updateReintegroPreview()"
+                            class="w-full px-3 py-2 border rounded-lg text-sm font-bold"></select>
+                    </div>
+                    <textarea id="edit-reintegro-intro" onkeyup="window.updateReintegroPreview()"
+                        class="w-full h-28 p-3 text-xs border rounded-xl focus:ring-4 focus:ring-purple-100 outline-none leading-relaxed"></textarea>
+                    <textarea id="edit-reintegro-footer" onkeyup="window.updateReintegroPreview()"
+                        class="w-full h-20 p-3 text-xs border rounded-xl focus:ring-4 focus:ring-purple-100 outline-none leading-relaxed"></textarea>
+                    <div class="border border-purple-200 rounded-xl p-4 bg-white">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="incluirDeudaAnterior" onchange="window.updateReintegroPreview()" class="w-4 h-4 accent-purple-600">
+                            <span class="text-[10px] font-black uppercase text-purple-700">Incluir deuda de meses anteriores</span>
+                        </label>
+                        <div id="deuda-anterior-info" class="hidden mt-3 text-[10px] text-slate-500 font-bold space-y-1"></div>
+                    </div>
+                    <button onclick="window.sendMailReintegro()"
+                        class="w-full py-4 bg-purple-700 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg hover:bg-purple-800">📧
+                        Enviar Gmail</button>
+                </div>
+            </div>
+            <div class="flex-1 flex flex-col bg-white overflow-hidden">
+                <div class="bg-purple-800 text-white p-4 flex justify-between items-center">
+                    <span class="font-bold text-[10px] uppercase tracking-widest">Vista Previa - Nota de
+                        Reintegro</span>
+                    <div class="flex gap-2">
+                        <button onclick="window.print()"
+                            class="bg-purple-600 px-4 py-2 rounded text-[10px] font-black uppercase">Imprimir</button>
+                        <button onclick="window.closeReintegroModal()"
+                            class="bg-purple-900 px-4 py-2 rounded text-[10px] font-black uppercase">Cerrar</button>
+                    </div>
+                </div>
+                <div id="reintegro-note-body" class="p-16 text-slate-900 bg-white overflow-y-auto flex-1 print:p-0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Compra/Reintegro -->
+    <div id="editCompraModal"
+        class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-100 my-8">
+            <div
+                class="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-6 text-white uppercase font-black text-sm tracking-widest text-center">
+                ✏️ Editar Compra / Reintegro
+            </div>
+            <div class="p-8 space-y-5">
+                <input type="hidden" id="editCompraId">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Fecha de
+                            Compra</label>
+                        <input type="date" id="editCompraFecha"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Insumo /
+                        Descripción</label>
+                    <input type="text" id="editCompraInsumo" placeholder="Ej: SONDAS DE ASPIRACIÓN K32"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold uppercase">
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Cantidad</label>
+                        <input type="number" step="any" id="editCompraCantidad" placeholder="0"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold text-center">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Monto Total $</label>
+                        <input type="number" step="0.01" id="editCompraMonto" placeholder="0.00"
+                            class="w-full px-4 py-3 rounded-xl border border-blue-300 bg-blue-50 outline-none font-black text-blue-700 text-center">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Proveedor</label>
+                        <input type="text" id="editCompraProveedor" placeholder="Farmacia..."
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none font-bold">
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-5 space-y-4">
+                    <p class="text-[10px] font-black uppercase text-slate-600 text-center">Actualizar Documentación
+                        (PDF) - Opcional</p>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="text-center">
+                            <label class="file-upload-btn cursor-pointer block">
+                                📄 Nueva Factura
+                                <input type="file" id="editCompraFactura" accept=".pdf" class="hidden">
+                            </label>
+                            <span class="text-[9px] text-slate-400 block mt-1">Dejar vacío si no cambia</span>
+                        </div>
+                        <div class="text-center">
+                            <label class="file-upload-btn cursor-pointer block">
+                                📋 Nueva Receta
+                                <input type="file" id="editCompraReceta" accept=".pdf" class="hidden">
+                            </label>
+                            <span class="text-[9px] text-slate-400 block mt-1">Dejar vacío si no cambia</span>
+                        </div>
+                        <div class="text-center">
+                            <label class="file-upload-btn cursor-pointer block">
+                                📝 Nuevo Formulario
+                                <input type="file" id="editCompraFormulario" accept=".pdf" class="hidden">
+                            </label>
+                            <span class="text-[9px] text-slate-400 block mt-1">Opcional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button onclick="window.closeEditCompraModal()"
+                        class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 text-center">Cancelar</button>
+                    <button onclick="window.updateCompra()"
+                        class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg hover:bg-blue-700 text-center">💾
+                        Actualizar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDocs, writeBatch, addDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUZbbsxy5QI5LVwVOsfi0SOPK0YMPcV-4",
+            authDomain: "recalde-care-connect.firebaseapp.com",
+            projectId: "recalde-care-connect",
+            storageBucket: "recalde-care-connect.firebasestorage.app",
+            messagingSenderId: "286633589646",
+            appId: "1:286633589646:web:de0553ddd89b33eb7d02df"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🔄 SYNC BIDIRECCIONAL — Conexión a Nursing
+        // ═══════════════════════════════════════════════════════════════
+        // Nursing solo maneja stockDomicilio (depto del hermano)
+        // Cuando Care Connect cambia stockDomicilio → reflejar en Nursing
+        // ═══════════════════════════════════════════════════════════════
+        const nursingConfig = {
+            apiKey: "AIzaSyD_S99nIcE08-yPbdbEYr_okxptZ7m9csI",
+            authDomain: "recalde-nursing.firebaseapp.com",
+            projectId: "recalde-nursing",
+            storageBucket: "recalde-nursing.firebasestorage.app",
+            messagingSenderId: "761960971726",
+            appId: "1:761960971726:web:6e45cc9f47f4c7c0a3bf9f"
+        };
+        const nursingApp = initializeApp(nursingConfig, 'nursing');
+        const nursingDb = getFirestore(nursingApp);
+        const nursingAuth = getAuth(nursingApp);
+
+        // Cache: nombre del insumo → firebaseId en Nursing
+        let nursingInventoryMap = {};
+        let nursingSyncReady = false;
+        const NURSING_APP_ID = 'recalde-care-final-v1';
+
+        // Autenticar y cargar mapa de inventario de Nursing
+        signInAnonymously(nursingAuth).then(async () => {
+            try {
+                const nursingInvRef = collection(nursingDb, 'artifacts', NURSING_APP_ID, 'public', 'data', 'inventory_stable');
+                const snap = await getDocs(nursingInvRef);
+                nursingInventoryMap = {};
+                snap.docs.forEach(d => { nursingInventoryMap[d.data().name] = d.id; });
+                nursingSyncReady = true;
+                console.log('🔗 Sync Nursing listo:', Object.keys(nursingInventoryMap).length, 'insumos mapeados');
+            } catch (e) {
+                console.warn('⚠️ No se pudo cargar mapa Nursing:', e.message);
+            }
+        }).catch(e => console.warn('⚠️ Auth Nursing falló:', e.message));
+
+        // Sincronizar stockDomicilio hacia Nursing
+        const syncToNursing = async (itemName, newStockDomicilio) => {
+            if (!nursingSyncReady) return;
+            const nursingDocId = nursingInventoryMap[itemName];
+            if (!nursingDocId) { console.log('🔄 Sync: no encontrado en Nursing:', itemName); return; }
+            try {
+                const nursingDocRef = doc(nursingDb, 'artifacts', NURSING_APP_ID, 'public', 'data', 'inventory_stable', nursingDocId);
+                await setDoc(nursingDocRef, { stockDomicilio: newStockDomicilio }, { merge: true });
+                console.log(`🔄 Sync → Nursing: ${itemName} domicilio=${newStockDomicilio}`);
+            } catch (e) {
+                console.warn('⚠️ Sync Nursing falló:', e.message);
+            }
+        };
+        // ═══════════════════════════════════════════════════════════════
+
+        const collectionName = 'care_connect_inventory';
+        const comprasCollection = 'care_connect_compras';
+        const SECRET_KEY = "PMR_91";
+
+        let selectedPedidoMonth = '';
+        let compras = [];
+
+        const initialData = [
+            { id: "1", cat: 'Farmacia', name: "ALCON LAGRIMAS II", stockDomicilio: 0, stockOsef: 0, requested: 2, delivered: 0, min: 1, precio: 8500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "2", cat: 'Farmacia', name: "ALCOHOL X 500 ML", stockDomicilio: 0, stockOsef: 0, requested: 4, delivered: 0, min: 1, precio: 3500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "3", cat: 'Farmacia', name: "ALGODÓN HIDRÓFILO X500G", stockDomicilio: 0, stockOsef: 0, requested: 2, delivered: 0, min: 1, precio: 3200, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "4", cat: 'Farmacia', name: "BAREX UNIPEG (PEG 3350)", stockDomicilio: 0, stockOsef: 0, requested: 1, delivered: 0, min: 15, precio: 24500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "5", cat: 'Insumos', name: "BOTÓN GTT MIC-KEY 18FR", stockDomicilio: 0, stockOsef: 0, requested: 1, delivered: 0, min: 1, precio: 128000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "6", cat: 'Insumos', name: "CÁNULA TQT PORTEX N°8", stockDomicilio: 0, stockOsef: 0, requested: 2, delivered: 0, min: 1, precio: 98000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "7", cat: 'Farmacia', name: "CLONAGIN SL (0.25MG SUBL)", stockDomicilio: 0, stockOsef: 0, requested: 2, delivered: 0, min: 30, precio: 11000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "8", cat: 'Farmacia', name: "CLONAZEPAM 2MG COMP", stockDomicilio: 0, stockOsef: 0, requested: 1, delivered: 0, min: 30, precio: 12000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "9", cat: 'Farmacia', name: "CLORHEXIDINA COLUT X500ML", stockDomicilio: 0, stockOsef: 0, requested: 1, delivered: 0, min: 1, precio: 5800, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "10", cat: 'Insumos', name: "COLLARINES TRAQUEOSTOMÍA", stockDomicilio: 0, stockOsef: 0, requested: 30, delivered: 0, min: 10, precio: 450, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "11", cat: 'Insumos', name: "FILTRO HUMIDIFICADOR HME", stockDomicilio: 0, stockOsef: 0, requested: 8, delivered: 0, min: 5, precio: 4900, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "12", cat: 'Insumos', name: "FILTROS HIDROFÓBICOS", stockDomicilio: 0, stockOsef: 0, requested: 10, delivered: 0, min: 5, precio: 1500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "13", cat: 'Farmacia', name: "GASAS ESTÉRILES 10X10", stockDomicilio: 0, stockOsef: 0, requested: 200, delivered: 0, min: 100, precio: 150, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "14", cat: 'Farmacia', name: "GASAS NO TEJIDAS 10X10", stockDomicilio: 0, stockOsef: 0, requested: 300, delivered: 0, min: 100, precio: 80, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "15", cat: 'Farmacia', name: "GOTABIOTIC D (OFTALMICO)", stockDomicilio: 0, stockOsef: 0, requested: 1, delivered: 0, min: 1, precio: 7500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "16", cat: 'Farmacia', name: "GUANTES ESTÉRILES", stockDomicilio: 0, stockOsef: 0, requested: 3, delivered: 0, min: 2, precio: 1200, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "17", cat: 'Farmacia', name: "GUANTES DESCARTABLES", stockDomicilio: 0, stockOsef: 0, requested: 10, delivered: 0, min: 5, precio: 6500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "18", cat: 'Insumos', name: "GUÍAS MACROGOTERO", stockDomicilio: 0, stockOsef: 0, requested: 30, delivered: 0, min: 10, precio: 1800, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "19", cat: 'Farmacia', name: "JERINGAS 20ML S/AGUJA", stockDomicilio: 0, stockOsef: 0, requested: 25, delivered: 0, min: 10, precio: 350, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "20", cat: 'Farmacia', name: "JERINGAS 60ML TOMEY", stockDomicilio: 0, stockOsef: 0, requested: 25, delivered: 0, min: 10, precio: 850, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "21", cat: 'Farmacia', name: "KEPPRA 500MG X60", stockDomicilio: 0, stockOsef: 0, requested: 3, delivered: 0, min: 30, precio: 45000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "22", cat: 'Farmacia', name: "LORAZEPAN CHOBET 2.5MG", stockDomicilio: 0, stockOsef: 0, requested: 4, delivered: 0, min: 30, precio: 10500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "23", cat: 'Farmacia', name: "LOSEC 20MG X28", stockDomicilio: 0, stockOsef: 0, requested: 2, delivered: 0, min: 14, precio: 11500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "24", cat: 'Farmacia', name: "MICOLIS CREMA X 30G", stockDomicilio: 0, stockOsef: 0, requested: 1, delivered: 0, min: 1, precio: 8200, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "25", cat: 'Insumos', name: "NUTRISON 1.0 KCAL (PACK)", stockDomicilio: 0, stockOsef: 0, requested: 15, delivered: 0, min: 7, precio: 14200, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "26", cat: 'Farmacia', name: "PAÑALES COMODÍN ULTRA", stockDomicilio: 0, stockOsef: 0, requested: 300, delivered: 0, min: 100, precio: 1100, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "27", cat: 'Farmacia', name: "PLATSUL CREMA X 100G", stockDomicilio: 0, stockOsef: 0, requested: 1, delivered: 0, min: 1, precio: 9500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "28", cat: 'Farmacia', name: "ROGASTRIL 1MG X30", stockDomicilio: 0, stockOsef: 0, requested: 4, delivered: 0, min: 30, precio: 18500, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "29", cat: 'Farmacia', name: "SABRIL 500MG X60", stockDomicilio: 0, stockOsef: 0, requested: 2, delivered: 0, min: 20, precio: 58000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "30", cat: 'Insumos', name: "ASPIRACIÓN CIRCUITO CERRADO", stockDomicilio: 0, stockOsef: 0, requested: 10, delivered: 0, min: 5, precio: 22000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "31", cat: 'Insumos', name: "SONDAS ASPIRACIÓN K32", stockDomicilio: 0, stockOsef: 0, requested: 100, delivered: 0, min: 50, precio: 850, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "32", cat: 'Farmacia', name: "TRILEPTAL 300MG X30", stockDomicilio: 0, stockOsef: 0, requested: 3, delivered: 0, min: 15, precio: 34000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "33", cat: 'Farmacia', name: "UROKIT 30 COMP", stockDomicilio: 0, stockOsef: 0, requested: 2, delivered: 0, min: 10, precio: 28000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "34", cat: 'Farmacia', name: "VALCOTE 500MG", stockDomicilio: 0, stockOsef: 0, requested: 4, delivered: 0, min: 25, precio: 51000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 },
+            { id: "35", cat: 'Farmacia', name: "VENTOLIN HFA (SALBUTAMOL)", stockDomicilio: 0, stockOsef: 0, requested: 3, delivered: 0, min: 2, precio: 15000, stateReclamo: 'mora', obs: "", stockAnterior: 0, claimQty: 0 }
+        ];
+
+        let inventory = [...initialData];
+        let currentView = 'casa';
+        let currentFilter = 'all';
+        let isEditor = false;
+        let unsubscribeSnap = null;
+        let unsubscribeCompras = null;
+
+        const getAvailableMonths = () => {
+            const months = [];
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const now = new Date();
+            for (let i = -3; i < 13; i++) {
+                const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                months.push({ value: `${date.getMonth() + 1}-${date.getFullYear()}`, label: `${monthNames[date.getMonth()]} ${date.getFullYear()}` });
+            }
+            return months;
+        };
+
+        const setDefaultMonth = () => {
+            const now = new Date();
+            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            selectedPedidoMonth = `${nextMonth.getMonth() + 1}-${nextMonth.getFullYear()}`;
+        };
+        setDefaultMonth();
+
+        window.updatePedidoMonth = (value) => { selectedPedidoMonth = value; window.render(); };
+
+        const init = async () => { startListener(); startComprasListener(); };
+
+        const startListener = () => {
+            if (unsubscribeSnap) unsubscribeSnap();
+            const colRef = collection(db, collectionName);
+            unsubscribeSnap = onSnapshot(colRef, async (snap) => {
+                const dbItems = snap.docs.map(d => ({ ...d.data(), firebaseId: d.id }));
+                if (dbItems.length > 0) {
+                    inventory = [...dbItems];
+                } else { inventory = [...initialData]; }
+                document.getElementById('sync-indicator').className = "pulse-dot bg-emerald-500 animate-pulse";
+                window.render();
+            }, (err) => { console.error("Firestore:", err); document.getElementById('sync-indicator').className = "pulse-dot bg-red-500"; window.render(); });
+            updateUIRole();
+        };
+
+        const startComprasListener = () => {
+            if (unsubscribeCompras) unsubscribeCompras();
+            const colRef = collection(db, comprasCollection);
+            unsubscribeCompras = onSnapshot(colRef, (snap) => {
+                compras = snap.docs.map(d => ({ ...d.data(), firebaseId: d.id }));
+                window.render();
+            });
+        };
+
+        window.showSaveNotification = (message = 'Cambio guardado') => {
+            const existing = document.getElementById('save-notification');
+            if (existing) existing.remove();
+            const notification = document.createElement('div');
+            notification.id = 'save-notification';
+            notification.innerHTML = `<div class="fixed bottom-6 right-6 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-[200] animate-pulse"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span class="font-bold text-sm uppercase tracking-wide">${message}</span></div>`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        };
+
+        window.openLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
+        window.closeLoginModal = () => { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('pass-code').value = ""; };
+
+        window.checkEditorAccess = () => {
+            if (document.getElementById('pass-code').value.toUpperCase() === SECRET_KEY) {
+                isEditor = true; updateUIRole(); window.closeLoginModal(); startListener();
+            } else { const err = document.getElementById('pass-error'); err.style.opacity = "1"; setTimeout(() => err.style.opacity = "0", 2500); }
+        };
+
+        window.logoutEditor = () => { isEditor = false; currentView = 'casa'; updateUIRole(); window.render(); };
+
+        const updateUIRole = () => {
+            document.getElementById('editor-controls').classList.toggle('hidden', !isEditor);
+            document.getElementById('btn-login-trigger').classList.toggle('hidden', isEditor);
+            document.getElementById('nav-tabs').classList.toggle('hidden', !isEditor);
+            document.getElementById('reader-banner').classList.toggle('hidden', isEditor);
+            const badge = document.getElementById('status-badge');
+            if (badge) badge.innerHTML = isEditor ? `<span class="px-3 py-1 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full uppercase border border-blue-200 font-mono">Modo Editor Activo</span>` : `<span class="px-3 py-1 bg-white shadow-sm text-slate-500 text-[10px] font-bold rounded-full uppercase border border-slate-200 tracking-widest font-mono">Modo Consulta (Lectura)</span>`;
+        };
+
+        window.updateField = async (firebaseId, field, value) => {
+            if (!isEditor || !firebaseId) return;
+            const item = inventory.find(i => i.firebaseId === firebaseId);
+            if (!item) return;
+            let val = parseFloat(value); if (isNaN(val)) val = 0; if (val < 0) val = 0;
+            let updateObj = { [field]: val };
+            if (field === 'stockAnterior') updateObj.stockOsef = val + (item.delivered || 0);
+            else if (field === 'delivered') {
+                updateObj.stockOsef = (item.stockAnterior || 0) + val;
+                // Actualizar automáticamente claimQty basado SOLO en lo pedido vs recibido
+                const autoMora = (item.requested || 0) - val;
+                updateObj.claimQty = autoMora > 0 ? autoMora : 0;
+            }
+            try { await updateDoc(doc(db, collectionName, firebaseId), updateObj); window.showSaveNotification('✓ Guardado'); if (field === 'stockDomicilio') syncToNursing(item.name, val); }
+            catch (error) { console.error('Error:', error); window.showSaveNotification('⚠ Error'); }
+        };
+
+        window.deleteItem = async (firebaseId) => {
+            if (!isEditor || !firebaseId) return;
+            if (!confirm('¿Estás seguro de eliminar este insumo?')) return;
+            try {
+                await deleteDoc(doc(db, collectionName, firebaseId));
+                window.showSaveNotification('✓ Insumo eliminado');
+            } catch (error) {
+                console.error('Error:', error);
+                window.showSaveNotification('⚠ Error al eliminar');
+            }
+        };
+
+        window.updateTextField = async (firebaseId, field, value) => {
+            if (!isEditor || !firebaseId) return;
+            try { await updateDoc(doc(db, collectionName, firebaseId), { [field]: value }); window.showSaveNotification('✓ Guardado'); }
+            catch (error) { window.showSaveNotification('⚠ Error'); }
+        };
+
+        window.bajarFIFO = async (firebaseId) => {
+            if (!isEditor || !firebaseId) return;
+            const item = inventory.find(i => i.firebaseId === firebaseId);
+            if (!item || (item.stockOsef || 0) < 1) return;
+            let newAnt = item.stockAnterior || 0, newDel = item.delivered || 0;
+            if (newAnt > 0) newAnt -= 1; else if (newDel > 0) newDel -= 1;
+            const newStockDom = (item.stockDomicilio || 0) + 1;
+            try {
+                await updateDoc(doc(db, collectionName, firebaseId), { stockDomicilio: newStockDom, stockAnterior: newAnt, delivered: newDel, stockOsef: newAnt + newDel });
+                window.showSaveNotification('✓ Stock actualizado');
+                syncToNursing(item.name, newStockDom); // 🔄 Sync → Nursing
+            }
+            catch (error) { window.showSaveNotification('⚠ Error'); }
+        };
+
+        window.setView = (v) => { if (!isEditor && v !== 'casa') return; currentView = v; currentFilter = 'all'; window.render(); };
+        window.setFilter = (f) => { currentFilter = f; window.render(); };
+
+        // ========== COMPRAS / REINTEGROS ==========
+        window.openCompraModal = () => {
+            const modal = document.getElementById('compraModal');
+            const mesSelect = document.getElementById('compraMes');
+            mesSelect.innerHTML = getAvailableMonths().map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+            const now = new Date();
+            document.getElementById('compraFecha').value = now.toISOString().split('T')[0];
+            mesSelect.value = `${now.getMonth() + 1}-${now.getFullYear()}`;
+            modal.classList.remove('hidden');
+        };
+        window.closeCompraModal = () => {
+            document.getElementById('compraModal').classList.add('hidden');
+            ['compraInsumo', 'compraCantidad', 'compraMonto', 'compraProveedor'].forEach(id => document.getElementById(id).value = '');
+            ['compraFactura', 'compraReceta', 'compraFormulario'].forEach(id => document.getElementById(id).value = '');
+            ['label-factura', 'label-receta'].forEach(id => document.getElementById(id).textContent = 'Sin archivo');
+            document.getElementById('label-formulario').textContent = 'Opcional';
+        };
+
+        window.updateFileLabel = (type) => {
+            const input = document.getElementById(`compra${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const label = document.getElementById(`label-${type}`);
+            label.textContent = input.files[0] ? input.files[0].name.substring(0, 15) + '...' : (type === 'formulario' ? 'Opcional' : 'Sin archivo');
+        };
+
+        window.saveCompra = async () => {
+            const insumo = document.getElementById('compraInsumo').value.trim();
+            const cantidad = parseInt(document.getElementById('compraCantidad').value) || 0;
+            const monto = parseFloat(document.getElementById('compraMonto').value) || 0;
+            const proveedor = document.getElementById('compraProveedor').value.trim();
+            const fecha = document.getElementById('compraFecha').value;
+            const mes = document.getElementById('compraMes').value;
+
+            if (!insumo || monto <= 0) { alert('Completá al menos el insumo y el monto'); return; }
+
+            try {
+                window.showSaveNotification('⏳ Subiendo...');
+                let facturaUrl = '', recetaUrl = '', formularioUrl = '';
+
+                const facturaFile = document.getElementById('compraFactura').files[0];
+                const recetaFile = document.getElementById('compraReceta').files[0];
+                const formularioFile = document.getElementById('compraFormulario').files[0];
+
+                const timestamp = Date.now();
+                if (facturaFile) {
+                    const facturaRef = ref(storage, `compras/${mes}/factura_${timestamp}_${facturaFile.name}`);
+                    await uploadBytes(facturaRef, facturaFile);
+                    facturaUrl = await getDownloadURL(facturaRef);
+                }
+                if (recetaFile) {
+                    const recetaRef = ref(storage, `compras/${mes}/receta_${timestamp}_${recetaFile.name}`);
+                    await uploadBytes(recetaRef, recetaFile);
+                    recetaUrl = await getDownloadURL(recetaRef);
+                }
+                if (formularioFile) {
+                    const formularioRef = ref(storage, `compras/${mes}/formulario_${timestamp}_${formularioFile.name}`);
+                    await uploadBytes(formularioRef, formularioFile);
+                    formularioUrl = await getDownloadURL(formularioRef);
+                }
+
+                await addDoc(collection(db, comprasCollection), {
+                    insumo: insumo.toUpperCase(),
+                    cantidad, monto, proveedor, fecha, mes,
+                    facturaUrl, recetaUrl, formularioUrl,
+                    estado: 'pendiente',
+                    createdAt: new Date().toISOString()
+                });
+
+                window.closeCompraModal();
+                window.showSaveNotification('✓ Compra guardada');
+            } catch (error) {
+                console.error('Error guardando compra:', error);
+                alert('Error al guardar: ' + error.message);
+            }
+        };
+
+        window.deleteCompra = async (firebaseId) => {
+            if (!confirm('¿Eliminar esta compra?')) return;
+            try { await deleteDoc(doc(db, comprasCollection, firebaseId)); window.showSaveNotification('✓ Eliminada'); }
+            catch (error) { window.showSaveNotification('⚠ Error'); }
+        };
+
+        window.toggleCompraEstado = async (firebaseId, currentEstado) => {
+            const newEstado = currentEstado === 'pendiente' ? 'reintegrado' : 'pendiente';
+            try { await updateDoc(doc(db, comprasCollection, firebaseId), { estado: newEstado }); window.showSaveNotification('✓ Actualizado'); }
+            catch (error) { window.showSaveNotification('⚠ Error'); }
+        };
+
+        window.editCompra = (firebaseId) => {
+            const compra = compras.find(c => c.firebaseId === firebaseId);
+            if (!compra) return;
+
+            document.getElementById('editCompraId').value = firebaseId;
+            document.getElementById('editCompraInsumo').value = compra.insumo || '';
+            document.getElementById('editCompraCantidad').value = compra.cantidad || '';
+            document.getElementById('editCompraMonto').value = compra.monto || '';
+            document.getElementById('editCompraProveedor').value = compra.proveedor || '';
+            document.getElementById('editCompraFecha').value = compra.fecha || '';
+
+            document.getElementById('editCompraModal').classList.remove('hidden');
+        };
+
+        window.closeEditCompraModal = () => {
+            document.getElementById('editCompraModal').classList.add('hidden');
+        };
+
+        window.updateCompra = async () => {
+            const firebaseId = document.getElementById('editCompraId').value;
+            const insumo = document.getElementById('editCompraInsumo').value.trim();
+            const cantidad = parseFloat(document.getElementById('editCompraCantidad').value) || 0;
+            const monto = parseFloat(document.getElementById('editCompraMonto').value) || 0;
+            const proveedor = document.getElementById('editCompraProveedor').value.trim();
+            const fecha = document.getElementById('editCompraFecha').value;
+
+            if (!insumo || monto <= 0) { alert('Completá al menos el insumo y el monto'); return; }
+
+            try {
+                window.showSaveNotification('⏳ Actualizando...');
+                const compra = compras.find(c => c.firebaseId === firebaseId);
+                let updateData = { insumo: insumo.toUpperCase(), cantidad, monto, proveedor, fecha };
+
+                // Subir nuevos archivos si se seleccionaron
+                const facturaFile = document.getElementById('editCompraFactura').files[0];
+                const recetaFile = document.getElementById('editCompraReceta').files[0];
+                const formularioFile = document.getElementById('editCompraFormulario').files[0];
+
+                const timestamp = Date.now();
+                if (facturaFile) {
+                    const facturaRef = ref(storage, `compras/${compra.mes}/factura_${timestamp}_${facturaFile.name}`);
+                    await uploadBytes(facturaRef, facturaFile);
+                    updateData.facturaUrl = await getDownloadURL(facturaRef);
+                }
+                if (recetaFile) {
+                    const recetaRef = ref(storage, `compras/${compra.mes}/receta_${timestamp}_${recetaFile.name}`);
+                    await uploadBytes(recetaRef, recetaFile);
+                    updateData.recetaUrl = await getDownloadURL(recetaRef);
+                }
+                if (formularioFile) {
+                    const formularioRef = ref(storage, `compras/${compra.mes}/formulario_${timestamp}_${formularioFile.name}`);
+                    await uploadBytes(formularioRef, formularioFile);
+                    updateData.formularioUrl = await getDownloadURL(formularioRef);
+                }
+
+                await updateDoc(doc(db, comprasCollection, firebaseId), updateData);
+                window.closeEditCompraModal();
+                window.showSaveNotification('✓ Compra actualizada');
+            } catch (error) {
+                console.error('Error actualizando compra:', error);
+                alert('Error al actualizar: ' + error.message);
+            }
+        };
+
+        // Función para acortar URLs usando TinyURL API
+        window.shortenUrl = async (longUrl) => {
+            try {
+                const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+                const shortUrl = await response.text();
+                return shortUrl || longUrl;
+            } catch (error) {
+                console.error('Error acortando URL:', error);
+                return longUrl;
+            }
+        };
+
+        window.openReintegroModal = () => {
+            const modal = document.getElementById('reintegroModal');
+            const mesSelect = document.getElementById('reintegroMesSelect');
+            const mesesConCompras = [...new Set(compras.filter(c => c.estado === 'pendiente').map(c => c.mes))];
+            mesSelect.innerHTML = mesesConCompras.map(m => {
+                const [mes, año] = m.split('-');
+                const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                return `<option value="${m}">${monthNames[parseInt(mes)]} ${año}</option>`;
+            }).join('');
+
+            document.getElementById('edit-reintegro-intro').value = "Por medio de la presente, yo Patricio Mariano Recalde (DNI 36.158.958), solicito formalmente el reintegro de los gastos detallados a continuación, correspondientes a insumos médicos adquiridos de manera particular ante la falta de provisión por parte de la Obra Social, según prescripciones médicas vigentes.";
+            document.getElementById('edit-reintegro-footer').value = "Se adjuntan las facturas y recetas correspondientes como respaldo de los gastos efectuados. Solicito se proceda al reintegro en la brevedad posible.";
+
+            window.updateReintegroPreview();
+            modal.classList.remove('hidden');
+        };
+        window.closeReintegroModal = () => document.getElementById('reintegroModal').classList.add('hidden');
+
+        window.updateReintegroPreview = () => {
+            const mes = document.getElementById('reintegroMesSelect').value;
+            const comprasMes = compras.filter(c => c.mes === mes && c.estado === 'pendiente');
+            const totalMes = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const intro = document.getElementById('edit-reintegro-intro').value;
+            const footer = document.getElementById('edit-reintegro-footer').value;
+            const [mesNum, año] = mes.split('-');
+            const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const incluirDeuda = document.getElementById('incluirDeudaAnterior')?.checked;
+
+            // Calcular deuda de meses anteriores
+            const [mesNumInt, añoInt] = [parseInt(mesNum), parseInt(año)];
+            const comprasAnteriores = compras.filter(c => {
+                if (c.estado !== 'pendiente' || c.mes === mes) return false;
+                const [cm, ca] = c.mes.split('-').map(Number);
+                return ca < añoInt || (ca === añoInt && cm < mesNumInt);
+            });
+            // Agrupar por mes
+            const deudaPorMes = {};
+            comprasAnteriores.forEach(c => {
+                if (!deudaPorMes[c.mes]) deudaPorMes[c.mes] = 0;
+                deudaPorMes[c.mes] += c.monto || 0;
+            });
+            const totalDeuda = comprasAnteriores.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const grandTotal = totalMes + (incluirDeuda ? totalDeuda : 0);
+
+            // Actualizar info del checkbox en el sidebar
+            const infoEl = document.getElementById('deuda-anterior-info');
+            if (infoEl) {
+                if (Object.keys(deudaPorMes).length > 0) {
+                    infoEl.classList.remove('hidden');
+                    infoEl.innerHTML = Object.entries(deudaPorMes).map(([m, v]) => {
+                        const [mn, ma] = m.split('-');
+                        return `<div class="flex justify-between"><span>${monthNames[parseInt(mn)]} ${ma}</span><span class="text-red-500">$${v.toLocaleString()}</span></div>`;
+                    }).join('') + `<div class="flex justify-between border-t border-purple-200 pt-1 mt-1 text-purple-700"><span>TOTAL DEUDA</span><span>$${totalDeuda.toLocaleString()}</span></div>`;
+                } else {
+                    infoEl.classList.add('hidden');
+                    infoEl.innerHTML = '';
+                }
+            }
+
+            // Sección deuda HTML para la vista previa
+            const deudaSection = (incluirDeuda && Object.keys(deudaPorMes).length > 0) ? `
+                <div class="mt-6 mb-2 border border-orange-200 rounded-lg overflow-hidden">
+                    <div class="bg-orange-50 px-4 py-3 border-b border-orange-200">
+                        <p class="text-[10px] font-black uppercase text-orange-700">⚠ Deuda Anterior Pendiente de Reintegro</p>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        ${Object.entries(deudaPorMes).map(([m, v]) => {
+                            const [mn, ma] = m.split('-');
+                            return `<tr class="text-[11px] border-b border-orange-100">
+                                <td class="py-2 px-4 font-bold">${monthNames[parseInt(mn)]} ${ma}</td>
+                                <td class="py-2 px-4 text-right font-black text-orange-700">$${v.toLocaleString()}</td>
+                            </tr>`;
+                        }).join('')}
+                        <tr class="bg-orange-100 border-t-2 border-orange-300">
+                            <td class="py-3 px-4 font-black uppercase text-xs text-right">Subtotal deuda anterior:</td>
+                            <td class="py-3 px-4 text-right font-black text-orange-800">$${totalDeuda.toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="bg-purple-900 text-white px-4 py-4 mt-2 rounded-lg flex justify-between items-center">
+                    <span class="font-black uppercase text-sm">TOTAL GENERAL A REINTEGRAR</span>
+                    <span class="font-black text-2xl">$${grandTotal.toLocaleString()}</span>
+                </div>` : '';
+
+            document.getElementById('reintegro-note-body').innerHTML = `
+                <div class="print-area">
+                    <div class="border-b-8 border-purple-900 pb-6 mb-12 flex justify-between items-end">
+                        <span class="text-3xl font-black uppercase tracking-tighter">RECALDE CONNECT</span>
+                        <div class="text-right text-[10px] font-bold uppercase font-mono leading-tight">
+                            <div>Solicitud de Reintegro</div>
+                            <div>${monthNames[parseInt(mesNum)]} ${año}</div>
+                            <div>Fecha: ${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    <div class="mb-10 text-sm text-slate-800 whitespace-pre-line leading-relaxed">${intro}</div>
+                    <table class="w-full text-left mb-4 border-collapse">
+                        <tr class="border-y-2 border-purple-900 text-[10px] font-black uppercase bg-purple-50">
+                            <th class="py-4 px-4">Fecha</th>
+                            <th class="py-4 px-4">Insumo</th>
+                            <th class="py-4 px-4">Cant.</th>
+                            <th class="py-4 px-4">Proveedor</th>
+                            <th class="py-4 px-4 text-center">Docs</th>
+                            <th class="py-4 px-4 text-right">Monto</th>
+                        </tr>
+                        ${comprasMes.map(c => `<tr class="text-[11px] border-b border-slate-100">
+                            <td class="py-3 px-4">${c.fecha || '-'}</td>
+                            <td class="py-3 px-4 font-bold uppercase">${c.insumo}</td>
+                            <td class="py-3 px-4 text-center">${c.cantidad || '-'}</td>
+                            <td class="py-3 px-4">${c.proveedor || '-'}</td>
+                            <td class="py-3 px-4 text-center text-[9px]">
+                                ${c.facturaUrl ? `<a href="${c.facturaUrl}" target="_blank" class="text-purple-600 underline">Factura</a>` : ''}
+                                ${c.recetaUrl ? `<a href="${c.recetaUrl}" target="_blank" class="text-purple-600 underline ml-1">Receta</a>` : ''}
+                                ${c.formularioUrl ? `<a href="${c.formularioUrl}" target="_blank" class="text-purple-600 underline ml-1">Form</a>` : ''}
+                            </td>
+                            <td class="py-3 px-4 text-right font-black text-purple-700">$${(c.monto || 0).toLocaleString()}</td>
+                        </tr>`).join('')}
+                        <tr class="border-t-2 border-purple-900 bg-purple-100">
+                            <td colspan="5" class="py-4 px-4 text-right font-black uppercase text-sm">SUBTOTAL ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}:</td>
+                            <td class="py-4 px-4 text-right font-black text-purple-800 text-xl">$${totalMes.toLocaleString()}</td>
+                        </tr>
+                    </table>
+                    ${deudaSection}
+                    ${!incluirDeuda || Object.keys(deudaPorMes).length === 0 ? `<div class="bg-purple-900 text-white px-4 py-4 mt-2 rounded-lg flex justify-between items-center"><span class="font-black uppercase text-sm">TOTAL A REINTEGRAR</span><span class="font-black text-2xl">$${totalMes.toLocaleString()}</span></div>` : ''}
+                    <div class="mb-16 mt-6 text-sm italic text-slate-600 whitespace-pre-line">${footer}</div>
+                    <div class="mt-20 pt-10 border-t border-slate-200">
+                        <p class="text-[10px] font-black uppercase">Firma del Solicitante: _____________________________</p>
+                        <p class="text-[10px] text-slate-400 mt-2">Patricio Mariano Recalde | DNI: 36.158.958 | CUIL: 23-36158958-0</p>
+                    </div>
+                </div>`
+        };
+
+        window.sendMailReintegro = () => {
+            const mes = document.getElementById('reintegroMesSelect').value;
+            const comprasMes = compras.filter(c => c.mes === mes && c.estado === 'pendiente');
+            const totalMes = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const incluirDeuda = document.getElementById('incluirDeudaAnterior')?.checked;
+            const intro = document.getElementById('edit-reintegro-intro').value;
+            const footer = document.getElementById('edit-reintegro-footer').value;
+            const [mesNum, año] = mes.split('-');
+            const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+            // Construir detalle con links
+            let detalleCompras = '';
+            comprasMes.forEach((c, index) => {
+                detalleCompras += `\n${index + 1}. ${c.insumo}\n`;
+                detalleCompras += `   Monto: $${(c.monto || 0).toLocaleString()}`;
+                if (c.cantidad) detalleCompras += ` | Cantidad: ${c.cantidad}`;
+                if (c.proveedor) detalleCompras += ` | Proveedor: ${c.proveedor}`;
+                detalleCompras += `\n`;
+
+                // Agregar links a documentos
+                if (c.facturaUrl || c.recetaUrl || c.formularioUrl) {
+                    detalleCompras += `   📎 Documentación adjunta:\n`;
+                    if (c.facturaUrl) {
+                        detalleCompras += `      • Factura: ${c.facturaUrl}\n`;
+                    }
+                    if (c.recetaUrl) {
+                        detalleCompras += `      • Receta: ${c.recetaUrl}\n`;
+                    }
+                    if (c.formularioUrl) {
+                        detalleCompras += `      • Formulario: ${c.formularioUrl}\n`;
+                    }
+                }
+            });
+
+            // Calcular deuda anterior para el mail
+            const [mesNumInt2, añoInt2] = [parseInt(mesNum), parseInt(año)];
+            const comprasAnterioresMail = compras.filter(c => {
+                if (c.estado !== 'pendiente' || c.mes === mes) return false;
+                const [cm, ca] = c.mes.split('-').map(Number);
+                return ca < añoInt2 || (ca === añoInt2 && cm < mesNumInt2);
+            });
+            const deudaPorMesMail = {};
+            comprasAnterioresMail.forEach(c => {
+                if (!deudaPorMesMail[c.mes]) deudaPorMesMail[c.mes] = 0;
+                deudaPorMesMail[c.mes] += c.monto || 0;
+            });
+            const totalDeudaMail = comprasAnterioresMail.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const grandTotalMail = totalMes + (incluirDeuda ? totalDeudaMail : 0);
+
+            let deudaMailSection = '';
+            if (incluirDeuda && Object.keys(deudaPorMesMail).length > 0) {
+                deudaMailSection = `\n${'═'.repeat(50)}\n` +
+                    `⚠ DEUDA ANTERIOR PENDIENTE DE REINTEGRO\n` +
+                    `${'═'.repeat(50)}\n` +
+                    Object.entries(deudaPorMesMail).map(([m, v]) => {
+                        const [mn] = m.split('-');
+                        return `  • ${monthNames[parseInt(mn)]} ${m.split('-')[1]}: $${v.toLocaleString()}`;
+                    }).join('\n') +
+                    `\n  SUBTOTAL DEUDA ANTERIOR: $${totalDeudaMail.toLocaleString()}\n`;
+            }
+
+            const subject = encodeURIComponent(`SOLICITUD DE REINTEGRO - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año} - RECALDE PATRICIO MARIANO (DNI 36.158.958)`);
+            const body = encodeURIComponent(
+                `A la Auditoría Médica de OSEF,\n\n` +
+                `${intro}\n\n` +
+                `${'═'.repeat(50)}\n` +
+                `DETALLE DE GASTOS - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}\n` +
+                `${'═'.repeat(50)}\n` +
+                detalleCompras +
+                `\n  SUBTOTAL ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}: $${totalMes.toLocaleString()}\n` +
+                deudaMailSection +
+                `\n${'═'.repeat(50)}\n` +
+                `TOTAL GENERAL A REINTEGRAR: $${grandTotalMail.toLocaleString()}\n` +
+                `${'═'.repeat(50)}\n\n` +
+                `${footer}\n\n` +
+                `Atentamente,\n\n` +
+                `Patricio Mariano Recalde\n` +
+                `DNI: 36.158.958\n` +
+                `CUIL: 23-36158958-0\n` +
+                `Email: pmrecalde91@gmail.com`
+            );
+
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${subject}&body=${body}&authuser=pmrecalde91@gmail.com`, '_blank');
+        };
+
+        // ========== RENDER ==========
+        window.render = () => {
+            const search = document.getElementById('searchBar').value.toLowerCase();
+            let list = inventory.filter(i => i.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name));
+
+            const totalMora = inventory.filter(i => { const autoMora = (i.requested || 0) - (i.delivered || 0); return autoMora > 0; }).length;
+            const bR = document.getElementById('badge-reclamos-count');
+            if (bR) { bR.innerText = totalMora; bR.classList.toggle('hidden', totalMora === 0); }
+
+            const totalReintegro = compras.filter(c => c.estado === 'pendiente').reduce((sum, c) => sum + (c.monto || 0), 0);
+            const bT = document.getElementById('badge-reintegros-total');
+            if (bT) bT.innerText = `$${totalReintegro.toLocaleString()}`;
+
+            ['casa', 'osef', 'nuevo_pedido', 'reclamos', 'reintegros'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) { el.classList.toggle('tab-active', currentView === t); el.classList.toggle('text-slate-500', currentView !== t); }
+            });
+
+            const stats = document.getElementById('stats-container');
+            const content = document.getElementById('main-content');
+            if (!isEditor) currentView = 'casa';
+
+            if (currentView === 'casa') {
+                const low = list.filter(i => i.stockDomicilio <= i.min).length;
+                const ok = list.filter(i => i.stockDomicilio > i.min).length;
+                if (isEditor) {
+                    stats.innerHTML = `<div onclick="window.setFilter('all')" class="glass-card p-6 stat-card ${currentFilter === 'all' ? 'active' : ''} cursor-pointer"><p class="text-[10px] font-black uppercase mb-1">Total</p><h3 class="text-3xl font-black">${list.length}</h3></div>
+                        <div onclick="window.setFilter('low')" class="glass-card p-6 stat-card ${currentFilter === 'low' ? 'active border-l-red-500' : ''} cursor-pointer"><p class="text-[10px] font-black uppercase mb-1 text-red-600">Alerta</p><h3 class="text-3xl font-black text-red-600">${low}</h3></div>
+                        <div onclick="window.setFilter('ok')" class="glass-card p-6 stat-card ${currentFilter === 'ok' ? 'active border-l-emerald-500' : ''} cursor-pointer"><p class="text-[10px] font-black uppercase mb-1 text-emerald-600">OK</p><h3 class="text-3xl font-black text-emerald-600">${ok}</h3></div>
+                        <div class="glass-card p-6 flex items-center justify-center font-mono text-[10px] uppercase font-bold text-blue-500">Editor</div>`;
+                } else {
+                    stats.innerHTML = `<div onclick="window.setFilter('all')" class="glass-card p-6 stat-card ${currentFilter === 'all' ? 'active' : ''} cursor-pointer"><p class="text-[10px] font-black uppercase mb-1">Total</p><h3 class="text-3xl font-black">${list.length}</h3></div>
+                        <div onclick="window.setFilter('low')" class="glass-card p-6 stat-card ${currentFilter === 'low' ? 'active border-l-red-500' : ''} cursor-pointer"><p class="text-[10px] font-black uppercase mb-1 text-red-600">Atención</p><h3 class="text-3xl font-black text-red-600">${low}</h3></div>
+                        <div onclick="window.setFilter('ok')" class="glass-card p-6 stat-card ${currentFilter === 'ok' ? 'active border-l-emerald-500' : ''} cursor-pointer"><p class="text-[10px] font-black uppercase mb-1 text-emerald-600">Disponible</p><h3 class="text-3xl font-black text-emerald-600">${ok}</h3></div>
+                        <div class="glass-card p-6 text-center"><p class="text-[9px] font-bold uppercase text-slate-400 mb-1">Actualizado</p><p class="text-xs font-black text-slate-600">${new Date().toLocaleDateString('es-AR')}</p></div>`;
+                }
+                if (currentFilter === 'low') list = list.filter(i => i.stockDomicilio <= i.min);
+                if (currentFilter === 'ok') list = list.filter(i => i.stockDomicilio > i.min);
+                content.innerHTML = renderTableCasa(list);
+            }
+            else if (currentView === 'osef') {
+                stats.innerHTML = `<div class="col-span-4 glass-card p-6 text-center font-mono text-[10px] font-bold uppercase text-slate-500">Gestión de Stock OSEF / Depósito</div>`;
+                content.innerHTML = renderTableOsef(list);
+            }
+            else if (currentView === 'nuevo_pedido') {
+                const monthOptions = getAvailableMonths().map(m => `<option value="${m.value}" ${m.value === selectedPedidoMonth ? 'selected' : ''}>${m.label}</option>`).join('');
+                stats.innerHTML = `<div class="col-span-4 glass-card p-6 border-l-4 border-l-blue-600"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><div><h3 class="text-xl font-black uppercase">Próximo Pedido</h3></div><div class="flex items-center gap-3"><div class="month-selector"><span class="text-xs font-bold uppercase">Pedido para:</span><select onchange="window.updatePedidoMonth(this.value)">${monthOptions}</select></div><button onclick="window.confirmMonthTransition()" class="px-6 py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase">Cerrar Mes</button></div></div></div>`;
+                content.innerHTML = renderTableNuevoPedido(list);
+            }
+            else if (currentView === 'reclamos') {
+                stats.innerHTML = `<div class="col-span-4 glass-card p-6 text-center font-mono text-[10px] uppercase font-bold text-slate-500">Auditoría de Reclamos</div>`;
+                // Filtrar SOLO comparando Pedido vs Recibido (sin incluir stock anterior)
+                const claimsList = list.filter(i => {
+                    const pedido = i.requested || 0;
+                    const recibido = i.delivered || 0;
+                    return recibido < pedido;  // Solo en mora si recibido < pedido
+                });
+                content.innerHTML = renderTableReclamos(claimsList);
+            }
+            else if (currentView === 'reintegros') {
+                const pendientes = compras.filter(c => c.estado === 'pendiente');
+                const reintegrados = compras.filter(c => c.estado === 'reintegrado');
+                const totalPend = pendientes.reduce((s, c) => s + (c.monto || 0), 0);
+                stats.innerHTML = `
+                    <div class="glass-card p-6 stat-card active border-l-purple-500"><p class="text-[10px] font-black uppercase mb-1 text-purple-600">Compras Pendientes</p><h3 class="text-3xl font-black text-purple-600">${pendientes.length}</h3></div>
+                    <div class="glass-card p-6 stat-card border-l-emerald-500"><p class="text-[10px] font-black uppercase mb-1 text-emerald-600">Reintegrados</p><h3 class="text-3xl font-black text-emerald-600">${reintegrados.length}</h3></div>
+                    <div class="glass-card p-6 stat-card border-l-amber-500"><p class="text-[10px] font-black uppercase mb-1 text-amber-600">Total a Reclamar</p><h3 class="text-2xl font-black text-amber-600">$${totalPend.toLocaleString()}</h3></div>
+                    <div class="glass-card p-6 flex flex-col items-center justify-center gap-2">
+                        <button onclick="window.openCompraModal()" class="w-full py-3 bg-purple-600 text-white rounded-xl font-black text-[10px] uppercase">+ Nueva Compra</button>
+                        <button onclick="window.openReintegroModal()" class="w-full py-3 bg-purple-800 text-white rounded-xl font-black text-[10px] uppercase" ${pendientes.length === 0 ? 'disabled style="opacity:0.5"' : ''}>📄 Nota Reintegro</button>
+                    </div>`;
+                content.innerHTML = renderTableReintegros(compras);
+            }
+        };
+
+        const renderTableCasa = (data) => {
+            if (isEditor) {
+                return `<table class="w-full text-left"><thead><tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b"><th class="px-8 py-5">Material</th><th class="px-4 py-5 text-center text-red-500">Mín</th><th class="px-8 py-5 text-center text-blue-600">Stock Casa</th><th class="px-8 py-5 text-center">Depósito</th></tr></thead>
+                <tbody class="divide-y text-sm font-bold">${data.map(i => `<tr class="${i.stockDomicilio <= i.min ? 'bg-red-50/20' : ''}"><td class="px-8 py-5 uppercase font-semibold text-slate-700">${i.name}</td><td class="px-4 py-5 text-center text-red-500 font-black">${i.min || 0}</td><td class="px-8 py-5 text-center"><span class="text-2xl font-black ${i.stockDomicilio <= i.min ? 'text-red-600' : 'text-blue-700'}">${i.stockDomicilio || 0}</span></td><td class="px-8 py-5 text-center text-slate-400 font-mono">${i.stockOsef || 0}</td></tr>`).join('')}</tbody></table>`;
+            } else {
+                return `<table class="w-full text-left"><thead><tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b"><th class="px-8 py-5">Insumo</th><th class="px-8 py-5 text-center">Disponible</th><th class="px-4 py-5 text-center">Estado</th></tr></thead>
+                <tbody class="divide-y text-sm font-bold">${data.map(i => {
+                    const isLow = i.stockDomicilio <= i.min;
+                    return `<tr class="${isLow ? 'bg-red-50/30' : ''}"><td class="px-8 py-5 uppercase font-semibold text-slate-700">${i.name}</td><td class="px-8 py-5 text-center"><span class="text-3xl font-black ${isLow ? 'text-red-600' : 'text-slate-800'}">${i.stockDomicilio || 0}</span><span class="text-xs text-slate-400 ml-2">/ mín: ${i.min || 0}</span></td><td class="px-4 py-5 text-center"><span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${isLow ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">${isLow ? '⚠ BAJO' : '✓ OK'}</span></td></tr>`;
+                }).join('')}</tbody></table>`;
+            }
+        };
+
+        const renderTableOsef = (data) => `<table class="w-full text-left"><thead><tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b"><th class="px-6 py-5">Insumo</th><th class="px-3 py-5 text-center text-red-500">Mín</th><th class="px-3 py-5 text-center">Casa</th><th class="px-3 py-5 text-center">Anterior</th><th class="px-3 py-5 text-center text-amber-600">Pedido</th><th class="px-3 py-5 text-center text-blue-600">Recibido</th><th class="px-3 py-5 text-center font-black">Dep.</th><th class="px-3 py-5 text-center">Acción</th><th class="px-3 py-5 text-center">🗑</th></tr></thead>
+        <tbody class="divide-y text-xs font-bold">${data.map(i => `<tr><td class="px-6 py-4 uppercase text-slate-800">${i.name}</td>
+            <td class="px-3 py-4 text-center"><input type="number" step="any" value="${i.min || 0}" onchange="window.updateField('${i.firebaseId}', 'min', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-12 text-center bg-white border rounded p-1 text-red-600 font-black"></td>
+            <td class="px-3 py-4 text-center"><input type="number" step="any" value="${i.stockDomicilio || 0}" onchange="window.updateField('${i.firebaseId}', 'stockDomicilio', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-12 text-center bg-white border rounded p-1 text-blue-700 font-black"></td>
+            <td class="px-3 py-4 text-center"><input type="number" step="any" value="${i.stockAnterior || 0}" onchange="window.updateField('${i.firebaseId}', 'stockAnterior', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-14 text-center border border-amber-300 rounded p-1 bg-amber-50 font-black"></td>
+            <td class="px-3 py-4 text-center"><input type="number" step="any" value="${i.requested || 0}" onchange="window.updateField('${i.firebaseId}', 'requested', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-12 text-center bg-amber-50 border border-amber-200 rounded p-1 font-black text-amber-700"></td>
+            <td class="px-3 py-4 text-center"><input type="number" step="any" value="${i.delivered || 0}" onchange="window.updateField('${i.firebaseId}', 'delivered', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-14 text-center bg-blue-50 border border-blue-300 rounded p-1 font-black text-blue-600"></td>
+            <td class="px-3 py-4 text-center font-black text-emerald-600 text-lg">${i.stockOsef || 0}</td>
+            <td class="px-3 py-4 text-center"><button onclick="window.bajarFIFO('${i.firebaseId}')" class="btn-bajar" ${(i.stockOsef || 0) <= 0 ? 'disabled' : ''}>Bajar</button></td>
+            <td class="px-3 py-4 text-center"><button onclick="window.deleteItem('${i.firebaseId}')" class="text-red-400 hover:text-red-600 text-lg">🗑</button></td></tr>`).join('')}</tbody></table>`;
+
+        const renderTableNuevoPedido = (data) => `<table class="w-full text-left"><thead><tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b"><th class="px-8 py-5">Insumo</th><th class="px-8 py-5 text-center text-blue-600">Cantidad</th><th class="px-4 py-5 text-center">🗑</th></tr></thead>
+        <tbody class="divide-y text-sm font-bold uppercase">${data.map(i => `<tr><td class="px-8 py-5 font-semibold text-slate-700">${i.name}</td><td class="px-8 py-5 text-center"><div class="flex items-center justify-center gap-3"><button onclick="window.updateField('${i.firebaseId}', 'requested', ${(i.requested || 0) - 1})" class="w-6 h-6 border rounded-full hover:bg-slate-100 font-black text-slate-400">-</button><input type="number" step="any" value="${i.requested || 0}" onchange="window.updateField('${i.firebaseId}', 'requested', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-16 text-center bg-white border border-blue-100 rounded p-1 text-blue-700 font-black text-lg"><button onclick="window.updateField('${i.firebaseId}', 'requested', ${(i.requested || 0) + 1})" class="w-6 h-6 border rounded-full hover:bg-slate-100 font-black text-slate-400">+</button></div></td><td class="px-4 py-5 text-center"><button onclick="window.deleteItem('${i.firebaseId}')" class="text-red-400 hover:text-red-600 text-lg">🗑</button></td></tr>`).join('')}</tbody></table>`;
+
+        const renderTableReclamos = (data) => `<table class="w-full text-left"><thead><tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b"><th class="px-8 py-5">Faltante</th><th class="px-8 py-5 text-center">Cantidad</th><th class="px-8 py-5 text-center">Estado</th><th class="px-4 py-5 text-center">🗑</th></tr></thead>
+        <tbody class="divide-y text-xs font-black uppercase text-slate-700">${data.map(i => {
+            const autoMora = (i.requested || 0) - (i.delivered || 0);  // SOLO pedido - recibido
+            const currentClaim = autoMora > 0 ? autoMora : 0;
+            return `<tr><td class="px-8 py-5 font-bold">${i.name}</td><td class="px-8 py-5 text-center"><input type="number" step="any" value="${currentClaim}" onchange="window.updateField('${i.firebaseId}', 'claimQty', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-24 text-center bg-red-50 border border-red-200 rounded p-2 text-red-600 font-black text-lg"></td><td class="px-8 py-5 text-center"><input type="text" value="${i.stateReclamo || 'mora'}" onchange="window.updateTextField('${i.firebaseId}', 'stateReclamo', this.value)" onkeydown="if(event.key==='Enter')this.blur()" class="w-full text-center border-b uppercase"></td><td class="px-4 py-5 text-center"><button onclick="window.deleteItem('${i.firebaseId}')" class="text-red-400 hover:text-red-600 text-lg">🗑</button></td></tr>`;
+        }).join('')}</tbody></table>`;
+
+        const renderTableReintegros = (data) => {
+            const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            return `<table class="w-full text-left"><thead><tr class="bg-purple-50 text-[10px] font-black uppercase text-purple-400 border-b"><th class="px-4 py-4">Fecha</th><th class="px-4 py-4">Insumo</th><th class="px-4 py-4 text-center">Cant.</th><th class="px-4 py-4 text-right">Monto</th><th class="px-4 py-4">Proveedor</th><th class="px-4 py-4 text-center">Docs</th><th class="px-4 py-4 text-center">Estado</th><th class="px-4 py-4 text-center">Acciones</th></tr></thead>
+            <tbody class="divide-y text-xs font-bold">${sorted.map(c => `<tr class="${c.estado === 'reintegrado' ? 'bg-emerald-50/50' : ''}">
+                <td class="px-4 py-4 text-slate-600">${c.fecha || '-'}</td>
+                <td class="px-4 py-4 uppercase text-slate-800">${c.insumo}</td>
+                <td class="px-4 py-4 text-center">${c.cantidad || '-'}</td>
+                <td class="px-4 py-4 text-right font-black text-purple-700">$${(c.monto || 0).toLocaleString()}</td>
+                <td class="px-4 py-4 text-slate-500">${c.proveedor || '-'}</td>
+                <td class="px-4 py-4 text-center">
+                    ${c.facturaUrl ? `<a href="${c.facturaUrl}" target="_blank" class="text-purple-600 hover:underline text-[9px]">📄</a>` : ''}
+                    ${c.recetaUrl ? `<a href="${c.recetaUrl}" target="_blank" class="text-purple-600 hover:underline text-[9px]">📋</a>` : ''}
+                    ${c.formularioUrl ? `<a href="${c.formularioUrl}" target="_blank" class="text-purple-600 hover:underline text-[9px]">📝</a>` : ''}
+                </td>
+                <td class="px-4 py-4 text-center"><button onclick="window.toggleCompraEstado('${c.firebaseId}', '${c.estado}')" class="file-badge ${c.estado === 'pendiente' ? 'pending' : ''}">${c.estado === 'pendiente' ? '⏳ Pendiente' : '✓ Reintegrado'}</button></td>
+                <td class="px-4 py-4 text-center">
+                    <button onclick="window.editCompra('${c.firebaseId}')" class="text-blue-500 hover:text-blue-700 text-lg mr-2" title="Editar">✏️</button>
+                    <button onclick="window.deleteCompra('${c.firebaseId}')" class="text-red-400 hover:text-red-600 text-lg" title="Eliminar">🗑</button>
+                </td>
+            </tr>`).join('')}</tbody></table>`;
+        };
+
+        // ========== PRINT / RECLAMO ==========
+        window.openPrintPreview = () => {
+            document.getElementById('edit-intro').value = "Por medio de la presente, yo Patricio Mariano Recalde, notifico formalmente la falta de entrega de los insumos detallados a continuación, correspondientes a las prescripciones vigentes.";
+            document.getElementById('edit-footer').value = "Se solicita la regularización inmediata del suministro.";
+            window.updateNotePreview();
+            document.getElementById('printModal').classList.remove('hidden');
+        };
+        window.closePrintPreview = () => document.getElementById('printModal').classList.add('hidden');
+        window.closeModal = () => document.getElementById('itemModal').classList.add('hidden');
+        window.openModal = () => document.getElementById('itemModal').classList.remove('hidden');
+
+        window.updateNotePreview = () => {
+            // Filtrar SOLO comparando Pedido vs Recibido
+            const claims = inventory.filter(i => {
+                const pedido = i.requested || 0;
+                const recibido = i.delivered || 0;
+                return recibido < pedido;
+            });
+            const intro = document.getElementById('edit-intro').value;
+            const footer = document.getElementById('edit-footer').value;
+            document.getElementById('note-body').innerHTML = `<div class="print-area"><div class="border-b-8 border-slate-900 pb-6 mb-12 flex justify-between items-end"><span class="text-3xl font-black uppercase tracking-tighter">RECALDE CONNECT</span><div class="text-right text-[10px] font-bold uppercase font-mono">Fecha: ${new Date().toLocaleDateString()}</div></div><div class="mb-10 text-sm text-slate-800 whitespace-pre-line leading-relaxed">${intro}</div><table class="w-full text-left mb-12 border-collapse"><tr class="border-y-2 border-slate-900 text-[10px] font-black uppercase bg-slate-50"><th class="py-4 px-4">Material Adeudado</th><th class="py-4 text-center">Cantidad</th></tr>${claims.map(f => { const autoMora = (f.requested || 0) - (f.delivered || 0); return `<tr class="text-[11px] border-b border-slate-100"><td class="py-4 px-4 font-bold uppercase">${f.name}</td><td class="py-4 text-center text-red-600 font-black">${autoMora}</td></tr>`; }).join('')}</table><div class="mb-24 text-sm italic text-slate-600 whitespace-pre-line">${footer}</div><div class="mt-20 pt-10 border-t border-slate-200"><p class="text-[10px] font-black uppercase">Firma: _____________________________</p><p class="text-[10px] text-slate-400 mt-2">Patricio Mariano Recalde | DNI: 36.158.958</p></div></div>`;
+        };
+
+        window.sendMailClaim = () => {
+            // Filtrar SOLO comparando Pedido vs Recibido
+            const claims = inventory.filter(i => {
+                const pedido = i.requested || 0;
+                const recibido = i.delivered || 0;
+                return recibido < pedido;
+            });
+            const intro = document.getElementById('edit-intro').value;
+            const footer = document.getElementById('edit-footer').value;
+            const subject = encodeURIComponent("RECLAMO SUMINISTROS - RECALDE PATRICIO MARIANO");
+            const body = encodeURIComponent(`${intro}\n\nINSUMOS ADEUDADOS:\n${claims.map(i => { const autoMora = (i.requested || 0) - (i.delivered || 0); return `• ${i.name}: ${autoMora} unidades`; }).join('\n')}\n\n${footer}\n\nPatricio Mariano Recalde\nDNI: 36.158.958`);
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${subject}&body=${body}&authuser=pmrecalde91@gmail.com`, '_blank');
+        };
+
+        window.confirmMonthTransition = async () => {
+            if (!isEditor) return;
+            if (confirm("¿Cerrar mes? El stock del depósito pasará a 'Stock Anterior'.")) {
+                const batch = writeBatch(db);
+                inventory.forEach(item => { if (item.firebaseId) batch.update(doc(db, collectionName, item.firebaseId), { stockAnterior: item.stockOsef, delivered: 0, claimQty: 0 }); });
+                await batch.commit();
+                alert("Mes cerrado.");
+            }
+        };
+
+        window.addItem = async () => {
+            if (!isEditor) return;
+            const name = document.getElementById('newName').value.trim();
+            if (!name) { alert('Ingresá un nombre'); return; }
+            try {
+                await addDoc(collection(db, collectionName), { id: 'custom_' + Date.now(), name: name.toUpperCase(), cat: document.getElementById('newCat').value, precio: parseFloat(document.getElementById('newPrice').value) || 0, stockDomicilio: parseFloat(document.getElementById('newHome').value) || 0, min: parseFloat(document.getElementById('newMin').value) || 0, stockOsef: 0, stockAnterior: 0, delivered: 0, requested: 0, stateReclamo: 'mora', obs: '', claimQty: 0 });
+                window.closeModal();
+                window.showSaveNotification('✓ Insumo creado');
+            } catch (error) { alert('Error: ' + error.message); }
+        };
+
+        init();
+    </script>
+</body>
+
+</html>
