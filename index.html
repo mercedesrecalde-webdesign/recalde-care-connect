@@ -493,6 +493,13 @@
                         class="w-full h-28 p-3 text-xs border rounded-xl focus:ring-4 focus:ring-purple-100 outline-none leading-relaxed"></textarea>
                     <textarea id="edit-reintegro-footer" onkeyup="window.updateReintegroPreview()"
                         class="w-full h-20 p-3 text-xs border rounded-xl focus:ring-4 focus:ring-purple-100 outline-none leading-relaxed"></textarea>
+                    <div class="border border-purple-200 rounded-xl p-4 bg-white">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="incluirDeudaAnterior" onchange="window.updateReintegroPreview()" class="w-4 h-4 accent-purple-600">
+                            <span class="text-[10px] font-black uppercase text-purple-700">Incluir deuda de meses anteriores</span>
+                        </label>
+                        <div id="deuda-anterior-info" class="hidden mt-3 text-[10px] text-slate-500 font-bold space-y-1"></div>
+                    </div>
                     <button onclick="window.sendMailReintegro()"
                         class="w-full py-4 bg-purple-700 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg hover:bg-purple-800">📧
                         Enviar Gmail</button>
@@ -1035,11 +1042,68 @@
         window.updateReintegroPreview = () => {
             const mes = document.getElementById('reintegroMesSelect').value;
             const comprasMes = compras.filter(c => c.mes === mes && c.estado === 'pendiente');
-            const total = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const totalMes = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
             const intro = document.getElementById('edit-reintegro-intro').value;
             const footer = document.getElementById('edit-reintegro-footer').value;
             const [mesNum, año] = mes.split('-');
             const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const incluirDeuda = document.getElementById('incluirDeudaAnterior')?.checked;
+
+            // Calcular deuda de meses anteriores
+            const [mesNumInt, añoInt] = [parseInt(mesNum), parseInt(año)];
+            const comprasAnteriores = compras.filter(c => {
+                if (c.estado !== 'pendiente' || c.mes === mes) return false;
+                const [cm, ca] = c.mes.split('-').map(Number);
+                return ca < añoInt || (ca === añoInt && cm < mesNumInt);
+            });
+            // Agrupar por mes
+            const deudaPorMes = {};
+            comprasAnteriores.forEach(c => {
+                if (!deudaPorMes[c.mes]) deudaPorMes[c.mes] = 0;
+                deudaPorMes[c.mes] += c.monto || 0;
+            });
+            const totalDeuda = comprasAnteriores.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const grandTotal = totalMes + (incluirDeuda ? totalDeuda : 0);
+
+            // Actualizar info del checkbox en el sidebar
+            const infoEl = document.getElementById('deuda-anterior-info');
+            if (infoEl) {
+                if (Object.keys(deudaPorMes).length > 0) {
+                    infoEl.classList.remove('hidden');
+                    infoEl.innerHTML = Object.entries(deudaPorMes).map(([m, v]) => {
+                        const [mn, ma] = m.split('-');
+                        return `<div class="flex justify-between"><span>${monthNames[parseInt(mn)]} ${ma}</span><span class="text-red-500">$${v.toLocaleString()}</span></div>`;
+                    }).join('') + `<div class="flex justify-between border-t border-purple-200 pt-1 mt-1 text-purple-700"><span>TOTAL DEUDA</span><span>$${totalDeuda.toLocaleString()}</span></div>`;
+                } else {
+                    infoEl.classList.add('hidden');
+                    infoEl.innerHTML = '';
+                }
+            }
+
+            // Sección deuda HTML para la vista previa
+            const deudaSection = (incluirDeuda && Object.keys(deudaPorMes).length > 0) ? `
+                <div class="mt-6 mb-2 border border-orange-200 rounded-lg overflow-hidden">
+                    <div class="bg-orange-50 px-4 py-3 border-b border-orange-200">
+                        <p class="text-[10px] font-black uppercase text-orange-700">⚠ Deuda Anterior Pendiente de Reintegro</p>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        ${Object.entries(deudaPorMes).map(([m, v]) => {
+                            const [mn, ma] = m.split('-');
+                            return `<tr class="text-[11px] border-b border-orange-100">
+                                <td class="py-2 px-4 font-bold">${monthNames[parseInt(mn)]} ${ma}</td>
+                                <td class="py-2 px-4 text-right font-black text-orange-700">$${v.toLocaleString()}</td>
+                            </tr>`;
+                        }).join('')}
+                        <tr class="bg-orange-100 border-t-2 border-orange-300">
+                            <td class="py-3 px-4 font-black uppercase text-xs text-right">Subtotal deuda anterior:</td>
+                            <td class="py-3 px-4 text-right font-black text-orange-800">$${totalDeuda.toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="bg-purple-900 text-white px-4 py-4 mt-2 rounded-lg flex justify-between items-center">
+                    <span class="font-black uppercase text-sm">TOTAL GENERAL A REINTEGRAR</span>
+                    <span class="font-black text-2xl">$${grandTotal.toLocaleString()}</span>
+                </div>` : '';
 
             document.getElementById('reintegro-note-body').innerHTML = `
                 <div class="print-area">
@@ -1052,7 +1116,7 @@
                         </div>
                     </div>
                     <div class="mb-10 text-sm text-slate-800 whitespace-pre-line leading-relaxed">${intro}</div>
-                    <table class="w-full text-left mb-8 border-collapse">
+                    <table class="w-full text-left mb-4 border-collapse">
                         <tr class="border-y-2 border-purple-900 text-[10px] font-black uppercase bg-purple-50">
                             <th class="py-4 px-4">Fecha</th>
                             <th class="py-4 px-4">Insumo</th>
@@ -1074,11 +1138,13 @@
                             <td class="py-3 px-4 text-right font-black text-purple-700">$${(c.monto || 0).toLocaleString()}</td>
                         </tr>`).join('')}
                         <tr class="border-t-2 border-purple-900 bg-purple-100">
-                            <td colspan="5" class="py-4 px-4 text-right font-black uppercase text-sm">TOTAL A REINTEGRAR:</td>
-                            <td class="py-4 px-4 text-right font-black text-purple-800 text-xl">$${total.toLocaleString()}</td>
+                            <td colspan="5" class="py-4 px-4 text-right font-black uppercase text-sm">SUBTOTAL ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}:</td>
+                            <td class="py-4 px-4 text-right font-black text-purple-800 text-xl">$${totalMes.toLocaleString()}</td>
                         </tr>
                     </table>
-                    <div class="mb-16 text-sm italic text-slate-600 whitespace-pre-line">${footer}</div>
+                    ${deudaSection}
+                    ${!incluirDeuda || Object.keys(deudaPorMes).length === 0 ? `<div class="bg-purple-900 text-white px-4 py-4 mt-2 rounded-lg flex justify-between items-center"><span class="font-black uppercase text-sm">TOTAL A REINTEGRAR</span><span class="font-black text-2xl">$${totalMes.toLocaleString()}</span></div>` : ''}
+                    <div class="mb-16 mt-6 text-sm italic text-slate-600 whitespace-pre-line">${footer}</div>
                     <div class="mt-20 pt-10 border-t border-slate-200">
                         <p class="text-[10px] font-black uppercase">Firma del Solicitante: _____________________________</p>
                         <p class="text-[10px] text-slate-400 mt-2">Patricio Mariano Recalde | DNI: 36.158.958 | CUIL: 23-36158958-0</p>
@@ -1089,7 +1155,8 @@
         window.sendMailReintegro = () => {
             const mes = document.getElementById('reintegroMesSelect').value;
             const comprasMes = compras.filter(c => c.mes === mes && c.estado === 'pendiente');
-            const total = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const totalMes = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const incluirDeuda = document.getElementById('incluirDeudaAnterior')?.checked;
             const intro = document.getElementById('edit-reintegro-intro').value;
             const footer = document.getElementById('edit-reintegro-footer').value;
             const [mesNum, año] = mes.split('-');
@@ -1104,23 +1171,47 @@
                 if (c.proveedor) detalleCompras += ` | Proveedor: ${c.proveedor}`;
                 detalleCompras += `\n`;
 
-                // Agregar links a documentos (acortados)
+                // Agregar links a documentos
                 if (c.facturaUrl || c.recetaUrl || c.formularioUrl) {
                     detalleCompras += `   📎 Documentación adjunta:\n`;
                     if (c.facturaUrl) {
-                        const shortUrl = c.facturaUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
-                        detalleCompras += `      • Factura: ${shortUrl}\n`;
+                        detalleCompras += `      • Factura: ${c.facturaUrl}\n`;
                     }
                     if (c.recetaUrl) {
-                        const shortUrl = c.recetaUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
-                        detalleCompras += `      • Receta: ${shortUrl}\n`;
+                        detalleCompras += `      • Receta: ${c.recetaUrl}\n`;
                     }
                     if (c.formularioUrl) {
-                        const shortUrl = c.formularioUrl.replace('https://firebasestorage.googleapis.com', 'https://bit.ly').substring(0, 50);
-                        detalleCompras += `      • Formulario: ${shortUrl}\n`;
+                        detalleCompras += `      • Formulario: ${c.formularioUrl}\n`;
                     }
                 }
             });
+
+            // Calcular deuda anterior para el mail
+            const [mesNumInt2, añoInt2] = [parseInt(mesNum), parseInt(año)];
+            const comprasAnterioresMail = compras.filter(c => {
+                if (c.estado !== 'pendiente' || c.mes === mes) return false;
+                const [cm, ca] = c.mes.split('-').map(Number);
+                return ca < añoInt2 || (ca === añoInt2 && cm < mesNumInt2);
+            });
+            const deudaPorMesMail = {};
+            comprasAnterioresMail.forEach(c => {
+                if (!deudaPorMesMail[c.mes]) deudaPorMesMail[c.mes] = 0;
+                deudaPorMesMail[c.mes] += c.monto || 0;
+            });
+            const totalDeudaMail = comprasAnterioresMail.reduce((sum, c) => sum + (c.monto || 0), 0);
+            const grandTotalMail = totalMes + (incluirDeuda ? totalDeudaMail : 0);
+
+            let deudaMailSection = '';
+            if (incluirDeuda && Object.keys(deudaPorMesMail).length > 0) {
+                deudaMailSection = `\n${'═'.repeat(50)}\n` +
+                    `⚠ DEUDA ANTERIOR PENDIENTE DE REINTEGRO\n` +
+                    `${'═'.repeat(50)}\n` +
+                    Object.entries(deudaPorMesMail).map(([m, v]) => {
+                        const [mn] = m.split('-');
+                        return `  • ${monthNames[parseInt(mn)]} ${m.split('-')[1]}: $${v.toLocaleString()}`;
+                    }).join('\n') +
+                    `\n  SUBTOTAL DEUDA ANTERIOR: $${totalDeudaMail.toLocaleString()}\n`;
+            }
 
             const subject = encodeURIComponent(`SOLICITUD DE REINTEGRO - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año} - RECALDE PATRICIO MARIANO (DNI 36.158.958)`);
             const body = encodeURIComponent(
@@ -1130,8 +1221,10 @@
                 `DETALLE DE GASTOS - ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}\n` +
                 `${'═'.repeat(50)}\n` +
                 detalleCompras +
+                `\n  SUBTOTAL ${monthNames[parseInt(mesNum)].toUpperCase()} ${año}: $${totalMes.toLocaleString()}\n` +
+                deudaMailSection +
                 `\n${'═'.repeat(50)}\n` +
-                `TOTAL A REINTEGRAR: $${total.toLocaleString()}\n` +
+                `TOTAL GENERAL A REINTEGRAR: $${grandTotalMail.toLocaleString()}\n` +
                 `${'═'.repeat(50)}\n\n` +
                 `${footer}\n\n` +
                 `Atentamente,\n\n` +
