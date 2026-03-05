@@ -1152,7 +1152,7 @@
                 </div>`
         };
 
-        window.sendMailReintegro = () => {
+        window.sendMailReintegro = async () => {
             const mes = document.getElementById('reintegroMesSelect').value;
             const comprasMes = compras.filter(c => c.mes === mes && c.estado === 'pendiente');
             const totalMes = comprasMes.reduce((sum, c) => sum + (c.monto || 0), 0);
@@ -1234,7 +1234,9 @@
                 `Email: pmrecalde91@gmail.com`
             );
 
-            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${subject}&body=${body}&authuser=pmrecalde91@gmail.com`, '_blank');
+            try { await navigator.clipboard.writeText(decodeURIComponent(body)); } catch(e) { console.warn('Clipboard:', e); }
+            window.showSaveNotification('📋 Cuerpo copiado — pegalo en Gmail con Ctrl+V');
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=auditoria.medica@osef.gob.ar&su=${subject}&authuser=pmrecalde91@gmail.com`, '_blank');
         };
 
         // ========== RENDER ==========
